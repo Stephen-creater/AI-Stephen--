@@ -1,0 +1,481 @@
+/* 
+ * Custom styling for personal website
+ * Theme: Minimalist with Purple Accents
+ */
+
+:root {
+  --bg-primary: #000000;
+  --purple-light: #9D4EDD;
+  --purple-dark: #8A2BE2;
+  --text-primary: #FFFFFF;
+  --text-secondary: #9CA3AF;
+  --border-color: #2A2D36;
+  --button-dark: #1D1F26;
+  --shadow-color: rgba(106, 13, 173, 0.3);
+  --transition-short: 150ms ease;
+  --transition-medium: 300ms ease;
+  --content-width: 1080px;
+}
+
+/* Base styles */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 1.5rem 0 1rem;
+}
+
+h1 {
+  font-size: 4rem;
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  font-size: 2.5rem;
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0 0 1.5rem;
+}
+
+/* Link styles */
+a {
+  color: var(--purple-light);
+  text-decoration: none;
+  transition: color var(--transition-short);
+}
+
+a:hover {
+  color: var(--text-primary);
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Card styles */
+.card {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: transform var(--transition-short), box-shadow var(--transition-short);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px var(--shadow-color);
+}
+
+/* Button styles */
+.btn {
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  border: none;
+  display: inline-block;
+  text-align: center;
+  text-transform: none;
+}
+
+.btn-primary {
+  background-color: #8A2BE2;
+  color: white;
+}
+
+.btn-dark {
+  background-color: #1D1F26;
+  color: white;
+}
+
+/* Header styling */
+header {
+  padding: 1.5rem 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: rgba(10, 12, 16, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+nav ul {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+nav a {
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: color var(--transition-short);
+}
+
+nav a:hover, nav a.active {
+  color: var(--text-primary);
+}
+
+/* Section styles */
+section {
+  padding: 6rem 0;
+}
+
+/* Hero section */
+.hero {
+  background-color: #000000;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* 首页优化：极简风格 */
+.hero .max-w-3xl {
+  width: 100%;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  margin-top: 1.5rem;
+  margin-bottom: 3rem;
+  letter-spacing: -0.02em;
+}
+
+.hero p.text-xl {
+  margin-top: 1.5rem;
+  margin-bottom: 2.5rem;
+  line-height: 1.8;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero .flex {
+  justify-content: center;
+}
+
+/* 渐入动画 - 简化 */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 移除了其他不必要的动画效果样式 */
+
+/* 首页各部分之间的间距调整 */
+#about, #featured, #interests-preview, #contact-preview {
+  padding-top: 8rem;
+  padding-bottom: 8rem;
+}
+
+#about h2, #featured h2, #interests-preview h2, #contact-preview h2 {
+  margin-bottom: 2rem;
+}
+
+/* Portfolio grid */
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+/* Movie showcase */
+.movie-card {
+  aspect-ratio: 2/3;
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.movie-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(to top, rgba(10, 12, 16, 0.9), transparent);
+  z-index: 1;
+}
+
+.movie-card-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+  z-index: 2;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(10, 12, 16, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-short);
+}
+
+.modal.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+/* Social icons */
+.social-icons {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.social-icon {
+  position: relative;
+}
+
+.social-icon img {
+  width: 24px;
+  height: 24px;
+  opacity: 0.7;
+  transition: opacity var(--transition-short), transform var(--transition-short);
+}
+
+.social-icon:hover img {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Tooltip styles - replacing qr-code */
+.tooltip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-short), transform var(--transition-short);
+  z-index: 10;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.tooltip-bottom {
+  top: 100%;
+  margin-top: 10px;
+}
+
+.social-icon:hover .tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.tooltip img {
+  width: 128px !important;
+  height: 128px !important;
+  border-radius: 6px;
+  opacity: 1 !important;
+}
+
+.tooltip p {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+/* Footer */
+footer {
+  padding: 3rem 0;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Animation classes */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity var(--transition-short), transform var(--transition-short);
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 3rem;
+  }
+  
+  h2 {
+    font-size: 2rem;
+  }
+  
+  .portfolio-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  
+  nav ul {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+  
+  .portfolio-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Profile card and image styles */
+.profile-card {
+  height: 100%;
+  transition: transform var(--transition-short), box-shadow var(--transition-short);
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+}
+
+.profile-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(138, 43, 226, 0.4);
+}
+
+.profile-img-container {
+  height: 100%;
+}
+
+.profile-image {
+  height: 100%;
+  transition: transform var(--transition-medium);
+}
+
+.hover-zoom:hover {
+  transform: scale(1.05);
+}
+
+/* Subtle animation for buttons */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(138, 43, 226, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(138, 43, 226, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(138, 43, 226, 0);
+  }
+}
+
+.btn-primary {
+  animation: pulse 2s infinite;
+}
+
+.btn-primary:hover {
+  animation: none;
+}
+
+/* Hero section specific styles for minimalist design */
+.hero h1 .text-purple-light {
+  color: #9D4EDD;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+}
+
+.hero p.text-gray-400 {
+  color: #9CA3AF;
+  font-weight: 400;
+  letter-spacing: 0.025em;
+  font-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  .hero h1 {
+    font-size: 4.5rem;
+  }
+  
+  .hero p.text-gray-400 {
+    font-size: 1.125rem;
+  }
+}
+
+/* Responsive adjustments for minimalist design */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero p.text-xl {
+    font-size: 1rem;
+  }
+  
+  .btn {
+    padding: 0.7rem 1.4rem;
+    font-size: 0.75rem;
+  }
+} 
