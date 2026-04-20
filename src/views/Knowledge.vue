@@ -156,14 +156,13 @@ onUnmounted(() => {
     <section class="page-hero">
       <div class="container">
         <div class="page-hero__card page-hero__card--compact">
-          <div class="page-hero__eyebrow">Curated archive</div>
           <h1 class="page-title" style="max-width: none;">
             个人<span class="accent-word">知识库</span>
           </h1>
           <p class="page-summary" style="margin-left: auto; margin-right: auto;">
-            这里是我现在使用的 10 个知识板块。旧目录已经全部替换，新的结构更接近我真实的学习、记录和项目系统。
+            以下是我精心构建的个人知识体系，涵盖 AI、项目、写作、信息源等多个领域。全部开源分享，欢迎探索和学习。
           </p>
-          <div class="sticker-note sticker-note--orange page-sticker">10 active sections</div>
+          <div class="page-hero__divider"></div>
         </div>
       </div>
     </section>
@@ -177,7 +176,7 @@ onUnmounted(() => {
             class="knowledge-card p-6"
           >
             <div class="flex items-center mb-4">
-              <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+              <div class="p-3 rounded-full bg-accent-soft bg-opacity-30 mr-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   class="h-7 w-7"
@@ -244,13 +243,6 @@ onUnmounted(() => {
                   </svg>
                 </button>
               </div>
-
-              <span class="feishu-tag">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                飞书知识库
-              </span>
             </div>
           </article>
         </div>
@@ -319,22 +311,6 @@ onUnmounted(() => {
     transform: translateX(3px);
   }
 
-  .feishu-tag {
-    display: inline-flex;
-    align-items: center;
-    width: fit-content;
-    background-color: var(--bg-soft) !important;
-    border: 1px solid rgba(20, 20, 19, 0.06) !important;
-    padding: 4px 10px !important;
-    border-radius: 4px !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.3px;
-    box-shadow: none;
-    transition: all 0.3s ease;
-    color: var(--muted) !important;
-    font-family: var(--font-mono);
-  }
-
   .copy-fingerprint {
     position: relative;
     z-index: 10;
@@ -367,8 +343,6 @@ onUnmounted(() => {
 
   .knowledge-action-stack {
     margin-top: 1rem;
-    display: grid;
-    gap: 0.75rem;
   }
 
   .category-appear {

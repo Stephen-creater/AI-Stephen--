@@ -217,7 +217,7 @@ function preloadMovieAssets(movieId) {
         quote: '"多元宇宙集结。"',
         images: [
           'https://assets.zhayieye.com/news/data/article/2025_04_05/f7b2bcd3f33923a981e5ec5a2ef129e1.jpg?x-oss-process=image/resize,w_650,m_lfit',
-          'https://static.cnbetacdn.com/article/2025/0327/32ce65accefd321.jpg',
+          'https://upload.wikimedia.org/wikipedia/en/e/ee/Avengers_Doomsday_poster.jpg',
           'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3OTXSedyko5gb5b3YJWptJhd47qF4HvOqng&s',
         
         ]
@@ -389,15 +389,14 @@ function preloadMovieAssets(movieId) {
   <section class="page-hero">
     <div class="container">
       <div class="page-hero__card page-hero__card--compact">
-        <div class="page-hero__eyebrow">Private canon</div>
-        <h1 class="page-title" style="max-width: 12ch; margin-left: auto; margin-right: auto;">
+        <h1 class="page-title interests-page-title" style="margin-left: auto; margin-right: auto;">
           <span>漫威宇宙</span>与<span class="accent-word">科幻世界</span>
         </h1>
         <p class="page-summary" style="margin-left: auto; margin-right: auto;">
           这里记录了我喜欢的漫威科幻电影、经典台词和影评感想。<br>
           <span class="text-sm text-gray-400 mt-3 block">A space dedicated to my favorite Marvel sci-fi movies, quotes, and reviews.</span>
         </p>
-        <div class="sticker-note sticker-note--green page-sticker">kept for joy</div>
+        <div class="page-hero__divider"></div>
       </div>
     </div>
   </section>
@@ -630,10 +629,10 @@ function preloadMovieAssets(movieId) {
           <div class="flex items-start">
             <div class="text-3xl font-bold mr-4" style="color: var(--muted-soft);">"</div>
             <div>
-              <p class="text-lg mb-4">如果我们不能保护地球，我们一定会为它复仇。</p>
-              <p class="text-sm text-gray-400 mb-2">If we can't protect the Earth, you can be damn well sure we'll avenge it.</p>
-              <p style="color: var(--accent-orange);">—— 钢铁侠 / Iron Man</p>
-              <p class="text-xs text-gray-500">《复仇者联盟》(2012)</p>
+              <p class="text-lg mb-4">复仇者，集结！</p>
+              <p class="text-sm text-gray-400 mb-2">Avengers, assemble!</p>
+              <p style="color: var(--accent-orange);">—— 美国队长 / Captain America</p>
+              <p class="text-xs text-gray-500">《复仇者联盟：终局之战》(2019)</p>
             </div>
           </div>
         </div>
@@ -643,10 +642,10 @@ function preloadMovieAssets(movieId) {
           <div class="flex items-start">
             <div class="text-3xl font-bold mr-4" style="color: var(--muted-soft);">"</div>
             <div>
-              <p class="text-lg mb-4">我是格鲁特。</p>
-              <p class="text-sm text-gray-400 mb-2">I am Groot.</p>
-              <p style="color: var(--accent-orange);">—— 格鲁特 / Groot</p>
-              <p class="text-xs text-gray-500">《银河护卫队》(2014)</p>
+              <p class="text-lg mb-4">无论代价是什么。</p>
+              <p class="text-sm text-gray-400 mb-2">Whatever it takes.</p>
+              <p style="color: var(--accent-orange);">—— 复仇者联盟 / Avengers</p>
+              <p class="text-xs text-gray-500">《复仇者联盟：终局之战》(2019)</p>
             </div>
           </div>
         </div>
@@ -656,10 +655,10 @@ function preloadMovieAssets(movieId) {
           <div class="flex items-start">
             <div class="text-3xl font-bold mr-4" style="color: var(--muted-soft);">"</div>
             <div>
-              <p class="text-lg mb-4">大多数人在混乱中看到威胁，而我看到的是机会。机会破坏秩序，带来自由。</p>
-              <p class="text-sm text-gray-400 mb-2">In chaos, there is opportunity. Opportunity to break free of our chains.</p>
-              <p style="color: var(--accent-orange);">—— 洛基 / Loki</p>
-              <p class="text-xs text-gray-500">《雷神》(2011)</p>
+              <p class="text-lg mb-4">我可以和你打一整天。</p>
+              <p class="text-sm text-gray-400 mb-2">I can do this all day.</p>
+              <p style="color: var(--accent-orange);">—— 美国队长 / Captain America</p>
+              <p class="text-xs text-gray-500">《美国队长：冬日战士》(2014)</p>
             </div>
           </div>
         </div>
@@ -669,10 +668,10 @@ function preloadMovieAssets(movieId) {
           <div class="flex items-start">
             <div class="text-3xl font-bold mr-4" style="color: var(--muted-soft);">"</div>
             <div>
-              <p class="text-lg mb-4">无论输赢，总要勇敢去做，这才是英雄。</p>
-              <p class="text-sm text-gray-400 mb-2">The measure of a person, of a hero, is how well they succeed at being who they are.</p>
-              <p style="color: var(--accent-orange);">—— 瓦尔基里 / Valkyrie</p>
-              <p class="text-xs text-gray-500">《雷神：诸神黄昏》(2017)</p>
+              <p class="text-lg mb-4">命运终会降临。</p>
+              <p class="text-sm text-gray-400 mb-2">Dread it. Run from it. Destiny arrives all the same.</p>
+              <p style="color: var(--accent-orange);">—— 灭霸 / Thanos</p>
+              <p class="text-xs text-gray-500">《复仇者联盟：无限战争》(2018)</p>
             </div>
           </div>
         </div>
@@ -693,11 +692,11 @@ function preloadMovieAssets(movieId) {
         <div class="space-y-6">
           <!-- Rank 1 -->
           <div v-fade-in class="card">
-            <div class="flex items-center">
-              <div class="text-4xl font-bold mr-6" style="color: var(--accent-orange);">1</div>
+            <div class="flex items-center ranking-row ranking-row--first">
+              <div class="text-4xl font-bold mr-6 ranking-row__index" style="color: var(--accent-orange);">1</div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold">复仇者联盟：无限战争</h3>
-                <p class="text-sm text-gray-300">Avengers: Infinity War (2018)</p>
+                <h3 class="text-xl font-bold">复仇者联盟：终局之战</h3>
+                <p class="text-sm text-gray-300">Avengers: Endgame (2019)</p>
               </div>
               <div class="text-xl font-bold" style="color: var(--accent-orange);">9.5</div>
             </div>
@@ -708,8 +707,8 @@ function preloadMovieAssets(movieId) {
             <div class="flex items-center">
               <div class="text-4xl font-bold mr-6" style="color: var(--accent-orange);">2</div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold">银河护卫队</h3>
-                <p class="text-sm text-gray-300">Guardians of the Galaxy (2014)</p>
+                <h3 class="text-xl font-bold">复仇者联盟：无限战争</h3>
+                <p class="text-sm text-gray-300">Avengers: Infinity War (2018)</p>
               </div>
               <div class="text-xl font-bold" style="color: var(--accent-orange);">9.2</div>
             </div>
@@ -720,8 +719,8 @@ function preloadMovieAssets(movieId) {
             <div class="flex items-center">
               <div class="text-4xl font-bold mr-6" style="color: var(--accent-orange);">3</div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold">复仇者联盟：终局之战</h3>
-                <p class="text-sm text-gray-300">Avengers: Endgame (2019)</p>
+                <h3 class="text-xl font-bold">奇异博士</h3>
+                <p class="text-sm text-gray-300">Doctor Strange (2016)</p>
               </div>
               <div class="text-xl font-bold" style="color: var(--accent-orange);">9.0</div>
             </div>
@@ -732,8 +731,8 @@ function preloadMovieAssets(movieId) {
             <div class="flex items-center">
               <div class="text-4xl font-bold mr-6" style="color: var(--accent-orange);">4</div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold">黑豹</h3>
-                <p class="text-sm text-gray-300">Black Panther (2018)</p>
+                <h3 class="text-xl font-bold">银河护卫队</h3>
+                <p class="text-sm text-gray-300">Guardians of the Galaxy (2014)</p>
               </div>
               <div class="text-xl font-bold" style="color: var(--accent-orange);">8.8</div>
             </div>
@@ -744,8 +743,8 @@ function preloadMovieAssets(movieId) {
             <div class="flex items-center">
               <div class="text-4xl font-bold mr-6" style="color: var(--accent-orange);">5</div>
               <div class="flex-1">
-                <h3 class="text-xl font-bold">奇异博士</h3>
-                <p class="text-sm text-gray-300">Doctor Strange (2016)</p>
+                <h3 class="text-xl font-bold">黑豹</h3>
+                <p class="text-sm text-gray-300">Black Panther (2018)</p>
               </div>
               <div class="text-xl font-bold" style="color: var(--accent-orange);">8.5</div>
             </div>
@@ -846,6 +845,20 @@ function preloadMovieAssets(movieId) {
 </template>
 
 <style>
+    .interests-page-title {
+      max-width: none !important;
+      white-space: nowrap;
+    }
+
+    .ranking-row--first {
+      align-items: flex-start;
+      padding-left: 0.22rem;
+    }
+
+    .ranking-row--first .ranking-row__index {
+      line-height: 1;
+      padding-top: 0.18rem;
+    }
 
     /* 电影卡片样式增强 */
     .movie-card {

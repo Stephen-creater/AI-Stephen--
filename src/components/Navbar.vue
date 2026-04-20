@@ -38,7 +38,6 @@ watch(
 onMounted(() => {
   const header = document.querySelector('.site-header')
   const brand = header?.querySelector('.site-brand')
-  const tag = header?.querySelector('.site-brand__tag')
   const navLinks = header?.querySelectorAll('.site-nav__link')
 
   if (!header || !brand || !navLinks?.length) {
@@ -63,16 +62,6 @@ onMounted(() => {
     '-=0.22'
   )
   timeline.from(
-    tag,
-    {
-      y: -6,
-      rotate: -7,
-      opacity: 0,
-      duration: 0.35,
-    },
-    '-=0.28'
-  )
-  timeline.from(
     navLinks,
     {
       y: -10,
@@ -90,9 +79,8 @@ onMounted(() => {
     <div class="container site-header__inner">
       <router-link to="/" class="site-brand">
         <span class="site-brand__wordmark">
-          <span class="site-brand__my">My</span>TechUniverse
+          Stephen<span class="site-brand__dot">·</span><span class="site-brand__my">叶耀楠</span>
         </span>
-        <span class="site-brand__tag">warm build</span>
       </router-link>
 
       <nav class="site-nav">

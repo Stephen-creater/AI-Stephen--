@@ -127,28 +127,20 @@ let faqObserver = null
   <section class="page-hero">
     <div class="container">
       <div class="page-hero__card page-hero__card--compact">
-        <div class="page-hero__eyebrow">Say hello</div>
         <h1 class="page-title" style="max-width: none;">
-          <span class="text-purple-light">联系</span>我
+          <span class="text-accent">联系</span>我
         </h1>
-        <p class="page-summary" style="margin-left: auto; margin-right: auto;">
-          有项目合作、技术交流或其他问题？请随时联系我，我会尽快回复。
-        </p>
-        <div class="sticker-note sticker-note--orange page-sticker">notes welcome</div>
+        <div class="page-hero__divider"></div>
       </div>
     </div>
   </section>
   
   <!-- Contact Section -->
-  <section class="pb-10 relative z-10">
+  <section class="pb-10 relative z-10 contact-section-tight">
     <div class="container mx-auto px-4">
-      <div class="contact-section">
+      <div class="contact-shell">
         <div class="contact-grid contact-grid--single">
           <div class="contact-info-col contact-info-col--centered">
-            <div class="contact-header">
-              <h2 class="text-xl font-bold">联系方式</h2>
-            </div>
-            
             <!-- Email -->
             <div class="contact-method relative">
               <div class="contact-icon">
@@ -226,13 +218,19 @@ let faqObserver = null
   <section class="py-16 relative z-10">
     <div class="container mx-auto px-4">
       <div v-fade-in class="max-w-3xl mx-auto">
-        <h2 class="text-3xl font-bold mb-8 text-center">常见问题</h2>
+        <div class="contact-faq-heading">
+          <span class="contact-faq-heading__eyebrow">Quick intro</span>
+          <h2 class="text-3xl font-bold text-center">认识我，最快的 5 个问题</h2>
+          <p class="contact-faq-heading__body">
+            比起一段标准自我介绍，我更想用五个问题，把我正在相信、正在做、也正在成为的东西讲清楚。
+          </p>
+        </div>
         
         <div class="faq-container">
           <!-- FAQ Item 1 -->
           <div class="faq-item faq-appear">
             <div class="faq-question">
-              <span>你提供哪些类型的服务？</span>
+              <span>你会怎么介绍现在的自己？</span>
               <div class="faq-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -240,14 +238,15 @@ let faqObserver = null
               </div>
             </div>
             <div class="faq-answer">
-              <p>我提供前端开发、Coze Agent 定制、模型微调以及AI相关的开发服务。无论是个人项目还是企业需求，我都能提供专业的解决方案。</p>
+              <p>我是杭电 27 届学生，现在最想成为的人，是 AI 产品架构师。</p>
+              <p>如果要再补一句，我大概算是一个脚踏实地的理想主义者吧。一边学技术、做产品、写内容，一边又很执着地相信，AI 会真正改变这个时代。现在的我，还在路上，但方向已经非常清楚了。</p>
             </div>
           </div>
           
           <!-- FAQ Item 2 -->
           <div class="faq-item faq-appear">
             <div class="faq-question">
-              <span>如何开始一个合作项目？</span>
+              <span>你为什么会这么相信 AI？</span>
               <div class="faq-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -255,14 +254,17 @@ let faqObserver = null
               </div>
             </div>
             <div class="faq-answer">
-              <p>合作过程通常从需求沟通开始，你可以通过微信或者邮件联系我，描述你的项目需求和预期目标。之后我们会安排详细的讨论，确定项目范围、时间线和预算等细节。</p>
+              <p>我从小就是个很重度的科幻迷。漫威宇宙、《万神殿》还有很多科幻作品，几乎构成了我理解未来世界的底色。</p>
+              <p>所以当 AI 真的开始从幻想走进现实的时候，我会有一种非常强烈的感觉：就是它不只是一个工具升级，而是下一次范式革命。</p>
+              <p>我一直很相信一句话：Superintelligence is the last invention humans will create.</p>
+              <p>如果有生之年能亲眼见证那一天，我会觉得自己活在了一个很值得的时代。</p>
             </div>
           </div>
           
           <!-- FAQ Item 3 -->
           <div class="faq-item faq-appear">
             <div class="faq-question">
-              <span>你的开发周期通常是多久？</span>
+              <span>你平时都在折腾些什么？</span>
               <div class="faq-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -270,14 +272,16 @@ let faqObserver = null
               </div>
             </div>
             <div class="faq-answer">
-              <p>开发周期取决于项目的复杂度和规模。一个简单的智能体可能需要1-2天，而一个功能完善的网页或游戏可能需要1-3周。在项目开始前，我会提供详细的时间预估。</p>
+              <p>我大部分时间都花在三件事上：做 AI 产品、学最新的 AI 技术、持续写内容。</p>
+              <p>前一段时间，我在携程 AI 团队做过 4 个半月的出海业务，也接触过早期投资，还投出了人生里的第一个项目。现在我更想把注意力放回自己身上，继续做一些真正属于自己的小产品。</p>
+              <p>对我来说，“折腾”不是瞎忙，而是在不断试着把想法变成作品，把输入变成结构，把兴趣变成长期积累。</p>
             </div>
           </div>
           
           <!-- FAQ Item 4 -->
           <div class="faq-item faq-appear">
             <div class="faq-question">
-              <span>你的收费标准是什么？</span>
+              <span>除了做项目，你还在认真经营什么？</span>
               <div class="faq-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -285,14 +289,17 @@ let faqObserver = null
               </div>
             </div>
             <div class="faq-answer">
-              <p>我的收费方式根据项目类型有所不同。我可以按项目整体报价，也可以按小时计费。具体费用取决于项目复杂度、所需技术、开发周期等因素。在开始合作前，我会提供详细的报价方案，确保价格透明合理。</p>
+              <p>我一直在搭自己的知识库。</p>
+              <p>我会把项目、写作、课程、信息源、投资思考，还有很多日常反思慢慢沉淀下来。因为我越来越觉得，人生其实就是一个可以持续迭代的系统。</p>
+              <p>很多东西当下看起来很碎，但只要你愿意长期记录、复盘、调整，最后它们会慢慢连成你的方法论，也会变成你自己的背景板。</p>
+              <p>所以某种程度上，我不是在“记笔记”，我是在给未来的自己留线索。</p>
             </div>
           </div>
           
           <!-- FAQ Item 5 -->
           <div class="faq-item faq-appear">
             <div class="faq-question">
-              <span>项目开发过程中如何沟通进度？</span>
+              <span>什么样的人，你会很想认识？</span>
               <div class="faq-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -300,7 +307,10 @@ let faqObserver = null
               </div>
             </div>
             <div class="faq-answer">
-              <p>我采用敏捷开发方法，通常会安排每周进度会议，及时向客户汇报项目状态和里程碑完成情况。我也会使用项目管理工具（如飞书知识库等）来跟踪任务，客户可以随时查看项目进展。此外，我保持畅通的沟通渠道，可以通过邮件、电话或即时通讯工具及时响应客户的问题和反馈。</p>
+              <p>如果你也相信 AI 会真正重塑世界，如果你也对未来还有很强的好奇心和想象力，如果你是一个真诚、直接、不太愿意按旧规则活着的人，那我会很想认识你。</p>
+              <p>我一直很喜欢乔布斯那句 Think Different。</p>
+              <p>不是为了显得特别，而是因为我真的觉得，很多值得做的事，本来就不该只是重复别人已经走过的路。</p>
+              <p>所以比起“认识更多人”，我更期待遇到那些真的有想法、有热情、也愿意行动的人～</p>
             </div>
           </div>
         </div>
@@ -338,7 +348,7 @@ let faqObserver = null
       justify-content: center;
       width: 40px;
       height: 40px;
-      background-color: rgba(106, 13, 173, 0.3);
+      background-color: rgba(217, 119, 87, 0.12);
       border-radius: 12px;
       margin-right: 1rem;
       transition: all 0.3s ease;
@@ -358,7 +368,7 @@ let faqObserver = null
     /* 复制成功提示 */
     .copy-tooltip {
       position: absolute;
-      background-color: #8A2BE2;
+      background-color: rgba(20, 20, 19, 0.86);
       color: white;
       padding: 4px 8px;
       border-radius: 4px;
@@ -376,7 +386,7 @@ let faqObserver = null
     /* 复制按钮样式调整 */
     .copy-btn {
       cursor: pointer;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--muted);
       transition: all 0.3s ease;
       position: relative;
       z-index: 5;
@@ -388,26 +398,32 @@ let faqObserver = null
     
     /* 二维码容器 */
     .qr-container {
-      border: 2px solid rgba(138, 43, 226, 0.3);
+      border: 1px solid rgba(217, 119, 87, 0.22);
       padding: 8px;
       border-radius: 12px;
-      background-color: white;
+      background-color: rgba(255, 252, 246, 0.72);
       width: 140px;
       height: 140px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 8px 32px rgba(106, 13, 173, 0.2);
+      box-shadow: 0 12px 28px rgba(150, 114, 73, 0.08);
     }
     
     /* 联系页面布局调整 */
-    .contact-section {
+    .contact-shell {
       max-width: 820px;
       margin: 0 auto;
-      background-color: rgba(255, 252, 246, 0.78);
-      border: 1px solid rgba(20, 20, 19, 0.08);
-      border-radius: 18px;
-      overflow: hidden;
+      background: transparent !important;
+      border: none !important;
+      outline: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      overflow: visible;
+    }
+
+    .contact-section-tight {
+      margin-top: -2.75rem;
     }
     
     .contact-grid {
@@ -418,6 +434,10 @@ let faqObserver = null
     .contact-grid--single {
       grid-template-columns: minmax(0, 1fr);
       justify-content: center;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
     }
     
     @media (max-width: 768px) {
@@ -440,6 +460,10 @@ let faqObserver = null
       max-width: 460px;
       margin: 0 auto;
       width: 100%;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
     }
 
     .contact-qr {
@@ -459,6 +483,39 @@ let faqObserver = null
     .faq-container {
       max-width: 800px;
       margin: 0 auto;
+    }
+
+    .contact-faq-heading {
+      display: grid;
+      gap: 0.9rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .contact-faq-heading__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      width: fit-content;
+      margin: 0 auto;
+      padding: 0.32rem 0.72rem;
+      border: 1px solid rgba(20, 20, 19, 0.08);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.66);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .contact-faq-heading__body {
+      max-width: 680px;
+      margin: 0 auto;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 0.98rem;
     }
     
     .faq-item {
@@ -496,11 +553,15 @@ let faqObserver = null
       border-top: 0px solid rgba(255, 255, 255, 0.05);
       line-height: 1.7;
     }
-    
+
     .faq-answer.open {
-      max-height: 500px;
+      max-height: 900px;
       padding: 0 1.25rem 1.25rem 1.25rem;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .faq-answer p + p {
+      margin-top: 0.8rem;
     }
     
     .faq-icon {
