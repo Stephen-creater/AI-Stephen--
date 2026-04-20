@@ -1,0 +1,658 @@
+<script setup>
+import { onMounted, onUnmounted } from 'vue'
+
+let knowledgeController = null
+let knowledgeObserver = null
+
+    // 改进UI元素样式
+    function enhanceUIElements() {
+      // 增强"查看详情"链接
+      document.querySelectorAll('.knowledge-card a.text-purple-light').forEach(link => {
+        link.classList.add('details-link');
+        link.innerHTML = `
+          <span>查看详情</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        `;
+      });
+      
+      // 增强"飞书文档"标签
+      document.querySelectorAll('.knowledge-card .bg-gray-800.text-purple-light').forEach(tag => {
+        tag.classList.add('feishu-tag');
+        tag.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          飞书文档
+        `;
+      });
+    }
+
+    // 复制链接功能
+    function setupCopyLinks() {
+      const knowledgeCards = document.querySelectorAll('.knowledge-card');
+      
+      knowledgeCards.forEach(card => {
+        const link = card.querySelector('a[target="_blank"]');
+        if (!link) return;
+        
+        // 创建分享按钮
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'share-btn';
+        shareBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          </svg>
+        `;
+        card.appendChild(shareBtn);
+        
+        // 创建提示tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'copy-tooltip';
+        tooltip.textContent = '链接已复制!';
+        card.appendChild(tooltip);
+        
+        // 添加点击事件
+        shareBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          try {
+            const url = link.getAttribute('href');
+            await navigator.clipboard.writeText(url);
+            
+            // 显示提示
+            tooltip.style.opacity = '1';
+            
+            // 2秒后隐藏提示
+            setTimeout(() => {
+              tooltip.style.opacity = '0';
+            }, 1000);
+          } catch (err) {
+            console.error('复制链接失败:', err);
+          }
+        }, { signal: knowledgeController.signal });
+      });
+    }
+    
+    // 滚动动画效果
+    function setupScrollAnimations() {
+      const cards = document.querySelectorAll('.knowledge-card');
+      
+      // 设置交错的动画效果
+      knowledgeObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              entry.target.classList.add('visible');
+            }, index * 100); // 错开每张卡片的显示时间
+          }
+        });
+      }, { threshold: 0.1 });
+      
+      cards.forEach(card => {
+        card.classList.add('category-appear');
+        knowledgeObserver.observe(card);
+      });
+    }
+    
+    // 确保卡片悬停动画效果
+    function setupHoverEffects() {
+      const cards = document.querySelectorAll('.knowledge-card');
+      
+      cards.forEach(card => {
+        // 确保卡片有正确的定位
+        if (getComputedStyle(card).position === 'static') {
+          card.style.position = 'relative';
+        }
+        
+        // 添加一个简单的hover class以便CSS选择器正确工作
+        card.addEventListener('mouseenter', () => {
+          card.classList.add('hover-active');
+        }, { signal: knowledgeController.signal });
+        
+        card.addEventListener('mouseleave', () => {
+          card.classList.remove('hover-active');
+        }, { signal: knowledgeController.signal });
+      });
+    }
+    
+    // 页面加载完成后初始化
+    onMounted(() => {
+      knowledgeController = new AbortController();
+      setupCopyLinks();
+      setupScrollAnimations();
+      setupHoverEffects();
+      enhanceUIElements();
+    });
+
+    onUnmounted(() => {
+      knowledgeController?.abort();
+      knowledgeController = null;
+      knowledgeObserver?.disconnect();
+      knowledgeObserver = null;
+    });
+  
+</script>
+
+<template>
+  <div class="knowledge-page">
+
+    <!-- Header -->
+    
+    
+    <!-- Knowledge Hero Section -->
+    <section class="pt-40 pb-16 relative overflow-hidden">
+      <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center">
+          <h1 class="text-4xl md:text-5xl font-bold mb-6 glow-text">
+            个人<span class="text-purple-light">知识库</span>
+          </h1>
+          <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+            以下是我精心构建的个人知识体系，涵盖AI、写作、信息源等多个领域。全部开源分享，欢迎探索和学习。
+          </p>
+        </div>
+      </div>
+      
+      <!-- Purple glowing sphere (decorative element) -->
+      <div class="absolute w-72 h-72 md:w-96 md:h-96 rounded-full bg-purple-dark opacity-10 filter blur-3xl left-1/2 transform -translate-x-1/2 -bottom-48"></div>
+    </section>
+
+      <!-- Knowledge Categories Section -->
+  <section class="pb-24">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- AI 分类 -->
+        <div class="knowledge-card p-6">
+          <div class="flex items-center mb-4">
+            <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold">AI</h3>
+          </div>
+          <p class="text-gray-400 mb-5 text-sm">人工智能领域的学习资源、最新进展和应用案例，涵盖大语言模型、机器学习等多个方向。</p>
+          <div class="flex justify-between items-center">
+            <a href="https://caednm4mxe5.feishu.cn/wiki/UTskwj6CJizP0ckxLnkcBI9wnwg?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              查看详情
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+          </div>
+        </div>
+        
+        <!-- 写作之道 分类 -->
+        <div class="knowledge-card p-6">
+          <div class="flex items-center mb-4">
+            <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold">The Way of Writing</h3>
+          </div>
+          <p class="text-gray-400 mb-5 text-sm">探索高效写作的方法论、技巧和工具，提升写作效率和质量的系统化指南。</p>
+          <div class="flex justify-between items-center">
+            <a href="https://caednm4mxe5.feishu.cn/wiki/WFuFwcKkfiZuHakeUmxcfqy2nKb?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              查看详情
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+          </div>
+        </div>
+        
+        <!-- 高质量信息源 分类 -->
+        <div class="knowledge-card p-6">
+          <div class="flex items-center mb-4">
+            <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold">High Quality Information Source</h3>
+          </div>
+          <p class="text-gray-400 mb-5 text-sm">精选的高质量信息源、学习渠道和知识平台，帮助获取高效、准确的专业信息。</p>
+          <div class="flex justify-between items-center">
+            <a href="https://caednm4mxe5.feishu.cn/wiki/Ntb7w2EiniYhPOk9ZWDcbmM8nOe?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              查看详情
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+          </div>
+        </div>
+        
+        <!-- 组织平台 分类 -->
+        <div class="knowledge-card p-6">
+          <div class="flex items-center mb-4">
+            <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold">Organization/Platform</h3>
+          </div>
+          <p class="text-gray-400 mb-5 text-sm">各领域重要组织和平台的资源整理，包括优质社区、研究机构和创新平台。</p>
+          <div class="flex justify-between items-center">
+            <a href="https://caednm4mxe5.feishu.cn/wiki/GfPrw3a0ViWzYmk6VP9ckbYcnne?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              查看详情
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+          </div>
+        </div>
+        
+        <!-- 学科体系 分类 -->
+        <div v-fade-in class="knowledge-card p-6">
+          <div class="flex items-center mb-4">
+            <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold">Discipline</h3>
+          </div>
+          <p class="text-gray-400 mb-5 text-sm">各学科核心知识体系和学习路径整理，帮助构建系统化、结构化的知识框架。</p>
+          <div class="flex justify-between items-center">
+            <a href="https://caednm4mxe5.feishu.cn/wiki/J5fZwXhnzieWtxkvf3nc08IAn2e?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              查看详情
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+          </div>
+        </div>
+        
+                <div v-fade-in class="knowledge-card p-6">
+                    <div class="flex items-center mb-4">
+                      <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                      </div>
+                      <h3 class="text-xl font-bold">Personal Instructions</h3>
+                    </div>
+                    <p class="text-gray-400 mb-5 text-sm">个人生活、学习和工作方法的实践指南，包括效率提升、自我管理等实用技巧。</p>
+                    <div class="flex justify-between items-center">
+                      <a href="https://caednm4mxe5.feishu.cn/wiki/OIE8wu539itrcck1PFac9UeanHh?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+                        查看详情
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </a>
+                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+                    </div>
+                  </div>
+                  
+                  <!-- 投资理财 分类 -->
+                  <div v-fade-in class="knowledge-card p-6">
+                    <div class="flex items-center mb-4">
+                      <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h3 class="text-xl font-bold">Investment and Financial Management</h3>
+                    </div>
+                    <p class="text-gray-400 mb-5 text-sm">个人投资理财知识和实践策略，涵盖资产配置、市场分析和风险管理等多个维度。</p>
+                    <div class="flex justify-between items-center">
+                      <a href="https://caednm4mxe5.feishu.cn/wiki/ZVlOwLukeiyho6k2kNFcarLdn6c?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+                        查看详情
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </a>
+                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+                    </div>
+                  </div>
+                  
+                  <!-- 媒体账号 分类 -->
+                  <div v-fade-in class="knowledge-card p-6">
+                    <div class="flex items-center mb-4">
+                      <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </div>
+                      <h3 class="text-xl font-bold">Media Account</h3>
+                    </div>
+                    <p class="text-gray-400 mb-5 text-sm">媒体账号运营和内容创作的经验与策略，包括平台选择、内容规划和用户增长等关键环节。</p>
+                    <div class="flex justify-between items-center">
+                      <a href="https://caednm4mxe5.feishu.cn/wiki/Ca2Ew5sq2iHRTakvdVvcLpJ0nKg?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+                        查看详情
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </a>
+                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+                    </div>
+                  </div>
+                  
+                  <!-- 创业 分类 -->
+                  <div v-fade-in class="knowledge-card p-6">
+                    <div class="flex items-center mb-4">
+                      <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                      <h3 class="text-xl font-bold">Start a Business</h3>
+                    </div>
+                    <p class="text-gray-400 mb-5 text-sm">创业全流程指南和资源整理，从创意发现、产品开发到团队组建和融资策略的系统化知识。</p>
+                    <div class="flex justify-between items-center">
+                      <a href="https://caednm4mxe5.feishu.cn/wiki/VZaZwtwFii9naVkswcoc0Yz6nmh?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+                        查看详情
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </a>
+                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+                    </div>
+                  </div>
+                  
+                  <!-- 健康 分类 -->
+                  <div v-fade-in class="knowledge-card p-6">
+                    <div class="flex items-center mb-4">
+                      <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                      </div>
+                      <h3 class="text-xl font-bold">Health</h3>
+                    </div>
+                    <p class="text-gray-400 mb-5 text-sm">健康生活与身心平衡的科学指南，包括饮食、运动、睡眠和心理健康等多个维度的实践方法。</p>
+                    <div class="flex justify-between items-center">
+                      <a href="https://caednm4mxe5.feishu.cn/wiki/DInkwZ3zLibDZuk87gicEqaCn7A?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+                        查看详情
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </a>
+                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+                    </div>
+                  </div>
+                  
+                  <!-- 大创 分类 -->
+                  <div v-fade-in class="knowledge-card p-6">
+                    <div class="flex items-center mb-4">
+                      <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                        </svg>
+                      </div>
+                      <h3 class="text-xl font-bold">大创</h3>
+                    </div>
+                    <p class="text-gray-400 mb-5 text-sm">大学生创新创业项目的规划、设计和实施指南，包含从选题到结项的全流程资料和实战经验。</p>
+                    <div class="flex justify-between items-center">
+                      <a href="https://caednm4mxe5.feishu.cn/wiki/JTzGwDYFSizzMBkHwIicIxktn5c?from=from_copylink" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+                        查看详情
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </a>
+                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
+                    </div>
+                  </div>
+                  
+                </div>
+              </div>
+            </section>
+  <!-- Footer -->
+  <footer class="bg-black bg-opacity-40 py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-xl font-bold mb-4">My<span class="text-purple-light">Tech</span>Universe</h3>
+          <p class="text-gray-400">探索、创造与无限可能</p>
+        </div>
+        
+        <div>
+          <h4 class="text-lg font-medium mb-4">快速导航</h4>
+          <ul class="space-y-2">
+            <li><router-link to="/" class="text-gray-400 hover:text-white transition-colors">首页</router-link></li>
+            <li><router-link to="/portfolio" class="text-gray-400 hover:text-white transition-colors">作品</router-link></li>
+            <li><router-link to="/interests" class="text-gray-400 hover:text-white transition-colors">兴趣</router-link></li>
+            <li><router-link to="/knowledge" class="text-gray-400 hover:text-white transition-colors">知识库</router-link></li>
+            <li><router-link to="/contact" class="text-gray-400 hover:text-white transition-colors">联系我</router-link></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-lg font-medium mb-4">联系方式</h4>
+          <ul class="space-y-2">
+            <li class="text-gray-400">邮箱: yaonanye1@gmail.com</li>
+            <li class="text-gray-400">微信: thanoswillreturn</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="mt-8 pt-8 border-t border-gray-800 text-center">
+        <p class="text-gray-500 text-sm">
+          &copy; 2025 MyTechUniverse. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Scripts -->
+  
+  
+  
+  
+
+  </div>
+</template>
+
+<style>
+
+    /* 知识库卡片样式 */
+    .knowledge-card {
+      position: relative;
+      border-radius: 12px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+      overflow: hidden;
+      transform: translateY(0); /* 确保初始状态定义 */
+      will-change: transform; /* 优化性能 */
+    }
+    
+    .knowledge-card:hover,
+    .knowledge-card.hover-active {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(106, 13, 173, 0.3);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    /* 知识库图标悬停效果 */
+    .knowledge-card:hover .rounded-full,
+    .knowledge-card.hover-active .rounded-full {
+      background-color: rgba(106, 13, 173, 0.5);
+      transform: scale(1.05);
+    }
+    
+    .knowledge-card .rounded-full {
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+    
+    /* 查看详情链接样式优化 */
+    .knowledge-card a.text-purple-light {
+      display: inline-flex;
+      align-items: center;
+      font-weight: 500;
+      padding: 6px 0;
+      border-bottom: 1px solid transparent;
+      transition: all 0.3s ease;
+    }
+    
+    .knowledge-card a.text-purple-light:hover {
+      border-bottom-color: rgba(138, 43, 226, 0.7);
+      text-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+    }
+    
+    .knowledge-card a.text-purple-light svg {
+      transition: transform 0.3s ease;
+    }
+    
+    .knowledge-card a.text-purple-light:hover svg {
+      transform: translateX(3px);
+    }
+
+    /* 查看详情链接增强样式 */
+    .details-link {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px !important;
+      background-color: rgba(138, 43, 226, 0.1);
+      border-radius: 20px;
+      border: 1px solid rgba(138, 43, 226, 0.2) !important;
+      font-weight: 500;
+      transition: all 0.3s ease !important;
+      box-shadow: 0 0 5px rgba(138, 43, 226, 0.1);
+    }
+    
+    .details-link:hover {
+      background-color: rgba(138, 43, 226, 0.2);
+      border-color: rgba(138, 43, 226, 0.4) !important;
+      box-shadow: 0 0 12px rgba(138, 43, 226, 0.2);
+      transform: translateY(-1px);
+    }
+    
+    .details-link span {
+      z-index: 1;
+    }
+    
+    /* 飞书文档标签样式优化 */
+    .knowledge-card .bg-gray-800.text-purple-light {
+      background-color: rgba(106, 13, 173, 0.15);
+      border: 1px solid rgba(138, 43, 226, 0.3);
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      box-shadow: 0 0 10px rgba(138, 43, 226, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .knowledge-card:hover .bg-gray-800.text-purple-light {
+      background-color: rgba(106, 13, 173, 0.25);
+      box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+    }
+    
+    /* 飞书文档标签增强样式 */
+    .feishu-tag {
+      display: inline-flex;
+      align-items: center;
+      background-color: rgba(106, 13, 173, 0.15) !important;
+      border: 1px solid rgba(138, 43, 226, 0.3) !important;
+      padding: 4px 10px !important;
+      border-radius: 16px !important;
+      font-weight: 500 !important;
+      letter-spacing: 0.3px;
+      box-shadow: 0 0 10px rgba(138, 43, 226, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .knowledge-card:hover .feishu-tag {
+      background-color: rgba(106, 13, 173, 0.25) !important;
+      box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+    }
+    
+    /* 链接复制提示样式 */
+    .copy-tooltip {
+      position: absolute;
+      background-color: rgba(138, 43, 226, 0.9);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      white-space: nowrap;
+      top: 15px;
+      right: 55px;
+    }
+    
+    .copy-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -5px;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 5px solid rgba(138, 43, 226, 0.9);
+    }
+    
+    /* 分享按钮样式 */
+    .share-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.2s ease;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .share-btn:hover {
+      background-color: rgba(106, 13, 173, 0.7);
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    /* 动画效果 */
+    @keyframes float {
+      0% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+      100% {
+        transform: translateY(0px);
+      }
+    }
+    
+    .float-animation {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    /* 分类卡片加载动画 */
+    .category-appear {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    
+    .category-appear.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  
+</style>

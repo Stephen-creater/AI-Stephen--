@@ -1,0 +1,1052 @@
+<script setup>
+import { onMounted, onUnmounted } from 'vue'
+
+let portfolioController = null
+
+onMounted(() => {
+      portfolioController = new AbortController()
+      const { signal } = portfolioController
+
+      // 筛选按钮交互效果
+      const filterButtons = document.querySelectorAll('.filter-btn')
+      const projectCards = document.querySelectorAll('.project-card')
+      
+      // 初始化筛选功能
+      function filterProjects(category) {
+        projectCards.forEach(card => {
+          if (category === 'all' || card.dataset.category === category) {
+            card.style.display = '';
+            // 使用setTimeout添加淡入效果
+            setTimeout(() => {
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }, 50);
+          } else {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            // 等待过渡效果完成后隐藏元素
+            setTimeout(() => {
+              card.style.display = 'none';
+            }, 300);
+          }
+        });
+      }
+      
+      // 设置筛选按钮点击事件
+      filterButtons.forEach(button => {
+          button.addEventListener('click', () => {
+          // 移除所有按钮的活跃状态
+          filterButtons.forEach(btn => {
+            btn.classList.remove('bg-purple-dark');
+            btn.classList.add('bg-gray-800');
+          });
+          
+          // 添加当前按钮活跃状态
+          button.classList.remove('bg-gray-800');
+          button.classList.add('bg-purple-dark');
+          
+          // 执行筛选
+          const category = button.dataset.category;
+          filterProjects(category);
+        }, { signal });
+      });
+          
+      // 卡片悬停效果增强
+          projectCards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+          card.classList.add('shadow-lg', 'shadow-purple-900/20');
+          card.style.transform = 'translateY(-5px)';
+        }, { signal });
+        
+        card.addEventListener('mouseleave', () => {
+          setTimeout(() => {
+            // 只有在没有被筛选隐藏的情况下才重置transform
+            if (card.style.display !== 'none') {
+              card.style.transform = '';
+            }
+          }, 150);
+        }, { signal });
+      });
+      
+      // 为所有项目卡片添加过渡效果
+      projectCards.forEach(card => {
+        card.style.transition = 'all 0.3s ease-in-out, opacity 0.3s ease-in-out, transform 0.3s ease-in-out';
+      });
+      
+      // 找到所有分享按钮 - 查找包含分享图标SVG路径的按钮
+      document.querySelectorAll('.project-card').forEach(card => {
+        const buttons = card.querySelectorAll('button');
+        buttons.forEach(button => {
+          const svgPath = button.querySelector('path');
+          if (svgPath && svgPath.getAttribute('d').startsWith('M8.684 13.342')) {
+            // 这是一个分享按钮
+            button.classList.add('share-btn');
+            button.setAttribute('title', '复制链接');
+          }
+        });
+      });
+      
+      // 添加复制链接功能
+      const shareButtons = document.querySelectorAll('.share-btn');
+      
+      shareButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // 获取当前卡片内的链接地址
+          const card = this.closest('.project-card');
+          const linkElement = card.querySelector('a[target="_blank"]');
+          const url = linkElement.getAttribute('href');
+          
+          // 复制到剪贴板
+          navigator.clipboard.writeText(url).then(() => {
+            // 创建并显示复制成功提示
+            showCopyTooltip(this);
+          }).catch(err => {
+            console.error('复制失败:', err);
+          });
+        }, { signal });
+      });
+      
+      // 显示复制成功提示
+      function showCopyTooltip(element) {
+        // 检查是否已存在提示，避免重复创建
+        const existingTooltip = document.querySelector('.copy-tooltip');
+        if (existingTooltip) {
+          existingTooltip.remove();
+        }
+        
+        // 创建提示元素
+        const tooltip = document.createElement('div');
+        tooltip.className = 'copy-tooltip';
+        tooltip.textContent = '复制成功';
+        
+        // 先添加到DOM中以便获取尺寸
+        document.body.appendChild(tooltip);
+        
+        // 定位提示元素
+        const rect = element.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        
+        // 计算位置，确保在窗口可见范围内
+        const tooltipWidth = tooltip.offsetWidth;
+        let leftPos = rect.left + rect.width/2 - tooltipWidth/2;
+        
+        // 确保不超出屏幕左右边界
+        if (leftPos < 10) leftPos = 10;
+        if (leftPos + tooltipWidth > window.innerWidth - 10) {
+          leftPos = window.innerWidth - tooltipWidth - 10;
+        }
+        
+        tooltip.style.left = leftPos + 'px';
+        // 调整垂直位置，确保足够的间距
+        tooltip.style.top = (rect.top - tooltip.offsetHeight - 20) + scrollTop + 'px';
+        
+        // 显示提示
+        setTimeout(() => {
+          tooltip.style.opacity = '1';
+        }, 10);
+        
+        // 添加动画效果到分享按钮
+        element.classList.add('text-purple-light');
+        element.style.transform = 'scale(1.2)';
+        setTimeout(() => {
+          element.style.transform = '';
+          setTimeout(() => {
+            element.classList.remove('text-purple-light');
+          }, 300);
+        }, 300);
+        
+        // 2秒后移除提示
+        setTimeout(() => {
+          tooltip.style.opacity = '0';
+          setTimeout(() => {
+            tooltip.remove();
+          }, 300);
+        }, 2000);
+      }
+    })
+
+onUnmounted(() => {
+  portfolioController?.abort()
+  portfolioController = null
+})
+  
+</script>
+
+<template>
+  <div class="portfolio-page">
+
+  <!-- Header -->
+  
+  
+  <!-- Portfolio Hero Section -->
+  <section class="pt-40 pb-0 relative overflow-hidden">
+    <div class="container mx-auto px-4">
+      <div class="max-w-3xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 glow-text">
+          我的作品集
+        </h1>
+        <p class="text-lg md:text-xl text-gray-300 mb-6 max-w-3xl mx-auto">
+          探索我设计和开发的各类项目，包括游戏、工具应用以及AI相关作品，每一个作品都凝聚了创意和技术的结晶。
+        </p>
+        
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-6">
+          <div class="text-purple-light flex items-center text-sm md:text-base mr-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+            </svg>
+            筛选类别:
+          </div>
+          <button class="filter-btn px-4 py-1.5 bg-purple-dark rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="all">所有</button>
+          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="coze">Coze</button>
+          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="cursor">Cursor</button>
+          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="wechat">公众号</button>
+          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="alipay">支付宝</button>
+          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="clip">剪辑</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Purple glowing sphere (decorative element) -->
+    <div class="absolute w-72 h-72 md:w-96 md:h-96 rounded-full bg-purple-dark opacity-10 filter blur-3xl -right-24 -bottom-24"></div>
+  </section>
+  
+  <!-- Portfolio Grid -->
+  <section class="mb-12">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- 项目1: 淘票票电影海报 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1025&q=80" 
+              alt="淘票票电影海报" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">淘票票电影海报</h3>
+            <p class="text-gray-400 mb-3 text-sm">基于Coze平台开发的智能体，能够生成专业的电影海报设计，适用于淘票票应用。为电影宣传提供高质量的视觉素材。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Coze</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">AI设计</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">图像生成</span>
+            </div>
+            <a href="https://www.coze.cn/store/agent/7481301871815278592?from=bots_card&bid=6g3f07lgs9g1v" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+      </div>
+      
+        <!-- 项目2: 批量提取抖音文案 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80" 
+              alt="批量提取抖音文案" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">批量提取抖音文案</h3>
+            <p class="text-gray-400 mb-3 text-sm">基于Coze工作流开发的智能体，能够从多个抖音链接中批量提取文案内容，为内容创作者和营销人员提供高效的文本采集工具。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Coze</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">内容采集</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">自动化</span>
+            </div>
+            <a href="https://www.coze.cn/store/agent/7476668689690001448?from=bots_card&bid=6g3f08e7c1g0f" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 项目3: AI日报长图 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+              alt="AI日报长图" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">AI日报长图</h3>
+            <p class="text-gray-400 mb-3 text-sm">基于Coze平台开发的智能体，自动收集并整理AI领域最新动态，生成精美的长图日报。为AI爱好者提供及时、高质量的行业资讯。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Coze</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">信息聚合</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">图像生成</span>
+            </div>
+            <a href="https://www.coze.cn/store/agent/7478227602050859035?from=bots_card&bid=6g3evupn4901j" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目4: 支付宝百宝箱创意奖作品 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="alipay">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=987&q=80" 
+              alt="支付宝百宝箱创意奖作品" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">支付宝百宝箱创意奖作品</h3>
+            <p class="text-gray-400 mb-3 text-sm">在支付宝百宝箱第五期智能体大赛中获得创意奖的作品，利用先进的AI技术创造了创新的用户体验与实用解决方案。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">支付宝</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">获奖作品</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">AI应用</span>
+            </div>
+            <a href="https://tbox.alipay.com/pro/share/202502APHi9E00284100?platform=WebService" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目5: Coze智能体平台个人主页 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+              alt="Coze智能体平台个人主页" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">Coze智能体平台个人主页</h3>
+            <p class="text-gray-400 mb-3 text-sm">我在Coze智能体平台上创建了38个不同的智能体作品，涵盖多种功能和应用场景，展示了我在AI智能体领域的专业能力和创造力。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Coze</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">智能体开发</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">平台主页</span>
+            </div>
+            <a href="https://www.coze.cn/user/1484768162621659?access_entrance=share_my_link&bid=6fp998a2k4g09" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目6: Perplexity用户五要素分析 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+              alt="Perplexity用户五要素分析" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">Perplexity用户五要素分析</h3>
+            <p class="text-gray-400 mb-3 text-sm">深入分析Perplexity用户行为的五个关键要素，提供全面的洞察和数据分析。通过Cursor平台构建的交互式数据分析工具。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">数据分析</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">用户研究</span>
+            </div>
+            <a href="https://896qvdfnyj.app.yourware.so/" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目7: Gemini 2.5 Pro登顶AI编程 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1365&q=80" 
+              alt="Gemini 2.5 Pro登顶AI编程" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">Gemini 2.5 Pro登顶AI编程</h3>
+            <p class="text-gray-400 mb-3 text-sm">详细分析Gemini 2.5 Pro在AI编程领域的突破性进展和技术优势，探讨其对开发者工作流程的影响和未来应用前景。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">AI研究</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">技术分析</span>
+            </div>
+            <a href="https://3ovqoo2h83.app.yourware.so/" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目8: 机器学习论文（决策树算法比较实验） -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80" 
+              alt="机器学习论文（决策树算法比较实验）" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">决策树算法比较实验</h3>
+            <p class="text-gray-400 mb-3 text-sm">机器学习领域学术论文，通过实验比较不同决策树算法的性能和准确率，包含详细的数据分析和可视化结果，为算法选择提供科学依据。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">机器学习</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">学术研究</span>
+            </div>
+            <a href="https://ag6j4i7ans.app.yourware.so/" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目9: 龙门面筋-美食瑰宝 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1065&q=80" 
+              alt="龙门面筋-美食瑰宝" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">龙门面筋-美食瑰宝</h3>
+            <p class="text-gray-400 mb-3 text-sm">探索中国传统美食龙门面筋的制作工艺、历史渊源及其独特魅力，通过多媒体呈现这一美食瑰宝的文化价值和地方特色。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">美食文化</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">传统工艺</span>
+            </div>
+            <a href="https://111hc81zw8.app.yourware.so/" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目10: 羊了个羊小游戏 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1511882150382-421056c89033?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80" 
+              alt="羊了个羊小游戏" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">羊了个羊小游戏</h3>
+            <p class="text-gray-400 mb-3 text-sm">基于前端技术开发的高人气消除类小游戏，玩家需要通过配对相同图案来消除卡片，挑战记忆力和策略思维，享受休闲娱乐体验。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">游戏开发</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">前端交互</span>
+          </div>
+            <a href="https://paqbsqb5gj.app.yourware.so/" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目11: 飞机大战小游戏 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1534732806146-b3bf32171b48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80" 
+              alt="飞机大战小游戏" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">飞机大战小游戏</h3>
+            <p class="text-gray-400 mb-3 text-sm">经典射击类游戏，玩家控制战机击落敌方飞机，融合了HTML5 Canvas和JavaScript技术，通过精巧的游戏机制和流畅的操作体验带来紧张刺激的游戏乐趣。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">游戏开发</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Canvas</span>
+            </div>
+            <a href="https://cxt20et8h7.app.yourware.so/" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 项目: AI创青春 | Start up 0809团队介绍 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+              alt="AI创青春 | Start up 0809团队介绍" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">【补档】AI创青春 | Start up 0809团队介绍</h3>
+            <p class="text-gray-400 mb-3 text-sm">介绍我们的AI创业团队背景、核心成员和创新项目规划，展示团队在人工智能领域的专业能力和创新愿景。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">公众号</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">团队介绍</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">AI创业</span>
+            </div>
+            <a href="https://mp.weixin.qq.com/s/nA7umRXW76VF0YzM-y_s3w" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问文章
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目: 【"职面"恐惧】第1期,大学生线上群面模拟活动 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+              alt="【职面恐惧】第1期,大学生线上群面模拟活动" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">精彩回顾 |【"职面"恐惧】第1期,大学生群面模拟</h3>
+            <p class="text-gray-400 mb-3 text-sm">详细回顾咨询行业群面模拟活动的全过程，包括专业面试官点评与实用技巧分享，为大学生求职提供实战经验。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">公众号</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">求职技巧</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">群面模拟</span>
+            </div>
+            <a href="https://mp.weixin.qq.com/s/_1zm6RQCZMrpbKnoLyp6Hg" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问文章
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 项目: 求职技巧分享｜无领导小组模拟 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+              alt="求职技巧分享｜无领导小组模拟" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">求职技巧分享｜无领导小组模拟来啦~</h3>
+            <p class="text-gray-400 mb-3 text-sm">深入讲解无领导小组讨论的流程、角色与应对策略，配合实际案例分析与现场模拟，帮助求职者掌握群面核心技巧。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">公众号</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">求职指导</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">无领导小组</span>
+            </div>
+            <a href="https://mp.weixin.qq.com/s/7Lr9PacQZn31Qti3w0hSmg" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问文章
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目: 求职技巧分享｜如何准备一次面试？ -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+              alt="求职技巧分享｜如何准备一次面试？" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">求职技巧分享｜如何准备一次面试？</h3>
+            <p class="text-gray-400 mb-3 text-sm">全面解析面试前的准备工作，包括公司研究、自我介绍准备、常见问题应对和形象管理等关键环节，提供实用的面试准备清单。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">公众号</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">面试技巧</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">求职指南</span>
+          </div>
+            <a href="https://mp.weixin.qq.com/s/9xF0qhipQBYCx2sPRqsrIA" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问文章
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 项目: 高能回顾 |【不安分青年工作坊】大厂职业规划师的干货分享 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
+              alt="高能回顾 |【不安分青年工作坊】大厂职业规划师的干货分享" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">高能回顾 |【不安分青年工作坊】大厂职业规划</h3>
+            <p class="text-gray-400 mb-3 text-sm">来自顶级互联网公司的职业规划师分享求职与职业发展的核心策略，包括行业选择、个人定位和长期发展规划的实用指导。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">公众号</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">职业规划</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">大厂分享</span>
+            </div>
+            <a href="https://mp.weixin.qq.com/s/9A5Yaohu3rs5ekkVTc8RRw" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问文章
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 项目: 电影解说《银河护卫队3》 -->
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="clip">
+          <div class="h-48 md:h-56 overflow-hidden">
+            <img 
+              src="https://media.themoviedb.org/t/p/w1000_and_h563_face/A7JQ7MIV5fkIxceI5hizRIe6DRJ.jpg" 
+              alt="电影解说《银河护卫队3》" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+            >
+          </div>
+          <div class="p-4 md:p-5">
+            <h3 class="text-xl font-bold mb-2">电影解说《银河护卫队3》</h3>
+            <p class="text-gray-400 mb-3 text-sm">独立完成剪辑、文案和全流程设计的电影解说视频，通过精彩的视听语言和深入的剧情分析，为观众提供独特视角的《银河护卫队3》解读。</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">剪辑</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">文案创作</span>
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">电影解说</span>
+            </div>
+            <a href="http://xhslink.com/a/0MfLH0Vwsydbb" target="_blank" class="text-purple-light inline-flex items-center text-sm">
+              访问作品
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+            <div class="flex justify-between items-center mt-4">
+              <button class="text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors share-btn" title="复制链接">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Footer -->
+  <footer class="bg-black bg-opacity-40 py-8 mt-8">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div>
+          <h3 class="text-xl font-bold mb-3">My<span class="text-purple-light">Tech</span>Universe</h3>
+          <p class="text-gray-400 text-sm">探索、创造与无限可能</p>
+        </div>
+        
+        <div>
+          <h4 class="text-lg font-medium mb-3">快速导航</h4>
+          <ul class="space-y-1.5">
+            <li><router-link to="/" class="text-gray-400 hover:text-white transition-colors text-sm">首页</router-link></li>
+            <li><router-link to="/portfolio" class="text-gray-400 hover:text-white transition-colors text-sm">作品</router-link></li>
+            <li><router-link to="/interests" class="text-gray-400 hover:text-white transition-colors text-sm">兴趣</router-link></li>
+            <li><router-link to="/knowledge" class="text-gray-400 hover:text-white transition-colors text-sm">知识库</router-link></li>
+            <li><router-link to="/contact" class="text-gray-400 hover:text-white transition-colors text-sm">联系我</router-link></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-lg font-medium mb-3">联系方式</h4>
+          <ul class="space-y-1.5">
+            <li class="text-gray-400 text-sm">邮箱: yaonanye1@gmail.com</li>
+            <li class="text-gray-400 text-sm">微信: thanoswillreturn</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="mt-6 pt-6 border-t border-gray-800 text-center">
+        <p class="text-gray-500 text-sm">
+          &copy; 2025 MyTechUniverse. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Scripts -->
+  
+  
+  
+  
+
+  </div>
+</template>
+
+<style>
+
+    .copy-tooltip {
+      position: absolute;
+      background-color: rgba(138, 43, 226, 0.9);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      white-space: nowrap;
+      top: -40px; /* 增加距离，避免与原来的提示重叠 */
+    }
+    
+    .copy-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid rgba(138, 43, 226, 0.9);
+    }
+    
+    .project-card .share-btn {
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    
+    .project-card .share-btn:hover {
+      color: var(--purple-light);
+      transform: scale(1.1);
+    }
+    
+    .project-card .share-btn:active {
+      transform: scale(0.95);
+    }
+    
+    /* 修改提示箭头悬浮效果，解决重叠问题 */
+    .project-card .share-btn::before {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      padding: 4px 8px;
+      border-radius: 4px;
+      background-color: rgba(138, 43, 226, 0.9);
+      color: white;
+      font-size: 12px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.2s ease;
+      visibility: hidden;
+      z-index: 1005; /* 确保在复制成功提示之上 */
+      margin-bottom: 10px; /* 增加间距，避免重叠 */
+    }
+    
+    .project-card .share-btn::after {
+      content: '';
+      position: absolute;
+      bottom: calc(100% - 5px);
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      border-width: 5px 5px 0;
+      border-style: solid;
+      border-color: rgba(138, 43, 226, 0.9) transparent transparent;
+      opacity: 0;
+      transition: all 0.2s ease;
+      visibility: hidden;
+      z-index: 1005; /* 确保与上面的提示保持一致 */
+    }
+    
+    /* 当鼠标悬停在分享按钮上时，隐藏复制成功提示 */
+    .project-card .share-btn:hover + .copy-tooltip {
+      opacity: 0 !important;
+      visibility: hidden !important;
+    }
+    
+    .project-card .share-btn:hover::before,
+    .project-card .share-btn:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      visibility: visible;
+    }
+
+    /* 增强访问作品链接样式 */
+    .project-card a.text-purple-light {
+      display: inline-flex;
+      align-items: center;
+      background-color: rgba(138, 43, 226, 0.1);
+      border: 1px solid rgba(138, 43, 226, 0.2);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 8px rgba(138, 43, 226, 0.1);
+    }
+    
+    .project-card a.text-purple-light:hover {
+      background-color: rgba(138, 43, 226, 0.2);
+      border-color: rgba(138, 43, 226, 0.4);
+      box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .project-card a.text-purple-light svg {
+      transition: transform 0.3s ease;
+    }
+    
+    .project-card a.text-purple-light:hover svg {
+      transform: translateX(3px);
+    }
+    
+    /* 增强标签样式 */
+    .project-card .text-xs.bg-gray-800.text-purple-light {
+      background-color: rgba(106, 13, 173, 0.15);
+      border: 1px solid rgba(138, 43, 226, 0.3);
+      box-shadow: 0 0 8px rgba(138, 43, 226, 0.1);
+      padding: 4px 10px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      transition: all 0.3s ease;
+    }
+    
+    .project-card:hover .text-xs.bg-gray-800.text-purple-light {
+      background-color: rgba(106, 13, 173, 0.25);
+      box-shadow: 0 0 12px rgba(138, 43, 226, 0.2);
+    }
+  
+</style>
