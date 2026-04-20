@@ -8,84 +8,6 @@ let faqObserver = null
       contactController = new AbortController();
       const { signal } = contactController;
 
-      // 处理表单提交
-      const contactForm = document.getElementById('contactForm');
-      if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = {
-          name: document.getElementById('name').value,
-          email: document.getElementById('email').value,
-          message: document.getElementById('message').value,
-          timestamp: new Date().toISOString()
-        };
-        
-        // 将表单数据存储到localStorage
-        const submissions = JSON.parse(localStorage.getItem('contactSubmissions') || '[]');
-        submissions.push(formData);
-        localStorage.setItem('contactSubmissions', JSON.stringify(submissions));
-        
-        // 将数据保存到JSON文件
-        saveContactToFile(formData);
-        
-        // 显示提交成功消息
-        alert('消息已成功发送！我会尽快回复您。');
-        
-        // 重置表单
-        contactForm.reset();
-      }, { signal });
-      }
-      
-      // 将联系表单数据保存到JSON文件
-      function saveContactToFile(formData) {
-        // 创建一个包含表单数据的文本文件
-        const fileName = `contact_${formData.name}_${new Date().getTime()}.json`;
-        const jsonData = JSON.stringify(formData, null, 2);
-        
-        // 创建一个隐藏的下载链接来保存数据
-        const blob = new Blob([jsonData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        
-        // 清理
-        setTimeout(() => {
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-        }, 0);
-        
-        // 将数据发送到服务器（如果有后端API的话）
-        // 由于这是前端项目，我们使用一个模拟的API保存数据
-        saveContactToLocalFile(formData, fileName);
-      }
-      
-      // 模拟将数据保存到本地文件（在实际项目中会替换为真实的API调用）
-      function saveContactToLocalFile(formData, fileName) {
-        // 在实际生产环境中，这里会是一个API调用
-        // 例如： fetch('/api/saveContact', { method: 'POST', body: JSON.stringify(formData) });
-        
-        // 由于这是前端项目，不能直接写入文件系统
-        // 这里使用localStorage记录保存的文件名，以便将来参考
-        const savedFiles = JSON.parse(localStorage.getItem('savedContactFiles') || '[]');
-        savedFiles.push({
-          fileName: fileName,
-          path: `data/contacts/${fileName}`,
-          savedAt: new Date().toISOString(),
-          contactInfo: formData
-        });
-        localStorage.setItem('savedContactFiles', JSON.stringify(savedFiles));
-        
-        // 在控制台记录，便于开发者确认
-        console.log('联系表单数据已保存:', fileName);
-        console.log('保存路径:', `data/contacts/${fileName}`);
-        console.log('表单数据:', formData);
-      }
-      
       // 复制功能
       const copyButtons = document.querySelectorAll('.copy-btn');
       copyButtons.forEach(btn => {
@@ -145,27 +67,6 @@ let faqObserver = null
         document.body.removeChild(tempTextarea);
       }
       
-      // 按钮波纹效果
-      const rippleButtons = document.querySelectorAll('.submit-btn');
-      rippleButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-          const x = e.clientX - e.target.getBoundingClientRect().left;
-          const y = e.clientY - e.target.getBoundingClientRect().top;
-          
-          const ripple = document.createElement('span');
-          ripple.classList.add('btn-ripple');
-          ripple.style.left = `${x}px`;
-          ripple.style.top = `${y}px`;
-          
-          this.appendChild(ripple);
-          
-          setTimeout(() => {
-            ripple.remove();
-          }, 600);
-        }, { signal });
-      });
-      
-
       // FAQ 展开/收起功能
       const faqQuestions = document.querySelectorAll('.faq-question');
       
@@ -242,39 +143,8 @@ let faqObserver = null
   <section class="pb-10 relative z-10">
     <div class="container mx-auto px-4">
       <div class="contact-section">
-        <div class="contact-grid">
-          <!-- Contact Form -->
-          <div class="contact-form-col">
-            <div class="contact-header">
-              <h2 class="text-xl font-bold">发送消息</h2>
-            </div>
-            <form id="contactForm" class="space-y-4">
-              <div class="form-row">
-                <label class="block text-gray-400 mb-1 text-sm" for="name">您的名字</label>
-                <input type="text" id="name" name="name" placeholder="请输入您的名字" class="form-input w-full" required>
-              </div>
-              
-              <div class="form-row">
-                <label class="block text-gray-400 mb-1 text-sm" for="email">电子邮箱</label>
-                <input type="email" id="email" name="email" placeholder="your@email.com" class="form-input w-full" required>
-              </div>
-              
-              <div class="form-row">
-                <label class="block text-gray-400 mb-1 text-sm" for="message">消息内容</label>
-                <textarea id="message" name="message" rows="5" placeholder="请输入您的消息..." class="form-input w-full resize-none" required></textarea>
-              </div>
-              
-              <button type="submit" class="submit-btn w-full mt-3">
-                发送消息
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                </svg>
-              </button>
-            </form>
-          </div>
-          
-          <!-- Contact Info -->
-          <div class="contact-info-col">
+        <div class="contact-grid contact-grid--single">
+          <div class="contact-info-col contact-info-col--centered">
             <div class="contact-header">
               <h2 class="text-xl font-bold">联系方式</h2>
             </div>
@@ -286,7 +156,7 @@ let faqObserver = null
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <div class="flex-1">
+              <div class="contact-method__content">
                 <h3 class="text-base font-medium">电子邮箱</h3>
                 <p class="text-gray-400 text-sm" id="emailText">yaonanye1@gmail.com</p>
               </div>
@@ -306,7 +176,7 @@ let faqObserver = null
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
               </div>
-              <div class="flex-1">
+              <div class="contact-method__content">
                 <h3 class="text-base font-medium">手机号码</h3>
                 <p class="text-gray-400 text-sm" id="phoneText">+86 151 6822 4355</p>
               </div>
@@ -325,7 +195,7 @@ let faqObserver = null
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <div class="flex-1">
+              <div class="contact-method__content">
                 <h3 class="text-base font-medium">微信</h3>
                 <p class="text-gray-400 text-sm" id="wechatText">thanoswillreturn</p>
               </div>
@@ -338,7 +208,7 @@ let faqObserver = null
             </div>
             
             <!-- QR Code -->
-            <div class="mt-6 flex justify-center">
+            <div class="contact-qr">
               <div class="text-center">
                 <p class="text-gray-400 mb-2 text-sm">扫描下方二维码添加</p>
                 <div class="qr-container mx-auto">
@@ -443,56 +313,23 @@ let faqObserver = null
 
 <style>
 
-    /* 联系表单卡片样式 */
-    .contact-card {
-      background-color: rgba(10, 12, 16, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      backdrop-filter: blur(10px);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .contact-card:hover {
-      box-shadow: 0 8px 32px rgba(106, 13, 173, 0.3);
-    }
-    
-    /* 表单输入框样式 */
-    .form-input {
-      background-color: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 12px 16px;
-      color: #fff;
-      transition: all 0.3s ease;
-    }
-    
-    .form-input:focus {
-      background-color: rgba(255, 255, 255, 0.08);
-      border-color: rgba(138, 43, 226, 0.5);
-      box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.25);
-      outline: none;
-    }
-    
-    .form-input::placeholder {
-      color: rgba(255, 255, 255, 0.4);
-    }
-    
     /* 联系方式卡片 */
     .contact-method {
-      display: flex;
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) 28px;
       align-items: center;
-      margin-bottom: 1rem;
-      padding: 0.75rem;
-      background-color: rgba(255, 255, 255, 0.03);
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: all 0.3s ease;
+      gap: 0.9rem;
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 1.15rem;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid rgba(20, 20, 19, 0.08);
+      transition: color 0.3s ease, transform 0.3s ease;
     }
     
     .contact-method:hover {
-      background-color: rgba(255, 255, 255, 0.05);
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(106, 13, 173, 0.2);
+      box-shadow: none;
     }
     
     .contact-icon {
@@ -508,28 +345,14 @@ let faqObserver = null
     }
     
     .contact-method:hover .contact-icon {
-      background-color: rgba(106, 13, 173, 0.5);
+      background-color: rgba(217, 119, 87, 0.18);
       transform: scale(1.05);
     }
-    
-    /* 发送按钮样式 */
-    .submit-btn {
-      background-color: #8A2BE2;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 24px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .submit-btn:hover {
-      background-color: #6A0DAD;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(106, 13, 173, 0.4);
+
+    .contact-method__content {
+      min-width: 0;
+      display: grid;
+      gap: 0.1rem;
     }
     
     /* 复制成功提示 */
@@ -560,7 +383,7 @@ let faqObserver = null
     }
     
     .copy-btn:hover {
-      color: white;
+      color: var(--accent-orange);
     }
     
     /* 二维码容器 */
@@ -579,17 +402,22 @@ let faqObserver = null
     
     /* 联系页面布局调整 */
     .contact-section {
-      max-width: 1000px;
+      max-width: 820px;
       margin: 0 auto;
-      background-color: rgba(10, 12, 16, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 20px;
+      background-color: rgba(255, 252, 246, 0.78);
+      border: 1px solid rgba(20, 20, 19, 0.08);
+      border-radius: 18px;
       overflow: hidden;
     }
     
     .contact-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
+    }
+
+    .contact-grid--single {
+      grid-template-columns: minmax(0, 1fr);
+      justify-content: center;
     }
     
     @media (max-width: 768px) {
@@ -604,17 +432,20 @@ let faqObserver = null
       margin-bottom: 1.5rem;
     }
     
-    .contact-form-col {
-      padding: 2rem;
-      border-right: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    
     .contact-info-col {
       padding: 2rem;
     }
-    
-    .form-row {
-      margin-bottom: 1rem;
+
+    .contact-info-col--centered {
+      max-width: 460px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .contact-qr {
+      display: flex;
+      justify-content: center;
+      margin-top: 1.8rem;
     }
     
     /* 精简页面元素间距 */

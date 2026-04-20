@@ -29,7 +29,9 @@ watch(
     <Navbar />
     <main class="page-frame">
       <router-view v-slot="{ Component }">
-        <component :is="Component" />
+        <transition name="route-fade" mode="out-in">
+          <component :is="Component" :key="route.fullPath" />
+        </transition>
       </router-view>
     </main>
     <SiteFooter />

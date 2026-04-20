@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { gsap } from 'gsap'
 
 const route = useRoute()
 const mobileMenuOpen = ref(false)
@@ -33,6 +34,55 @@ watch(
     closeMobileMenu()
   }
 )
+
+onMounted(() => {
+  const header = document.querySelector('.site-header')
+  const brand = header?.querySelector('.site-brand')
+  const tag = header?.querySelector('.site-brand__tag')
+  const navLinks = header?.querySelectorAll('.site-nav__link')
+
+  if (!header || !brand || !navLinks?.length) {
+    return
+  }
+
+  const timeline = gsap.timeline({ defaults: { ease: 'power2.out' } })
+
+  timeline.from(header, {
+    y: -18,
+    opacity: 0,
+    filter: 'blur(10px)',
+    duration: 0.55,
+  })
+  timeline.from(
+    brand,
+    {
+      y: -10,
+      opacity: 0,
+      duration: 0.4,
+    },
+    '-=0.22'
+  )
+  timeline.from(
+    tag,
+    {
+      y: -6,
+      rotate: -7,
+      opacity: 0,
+      duration: 0.35,
+    },
+    '-=0.28'
+  )
+  timeline.from(
+    navLinks,
+    {
+      y: -10,
+      opacity: 0,
+      stagger: 0.06,
+      duration: 0.32,
+    },
+    '-=0.18'
+  )
+})
 </script>
 
 <template>

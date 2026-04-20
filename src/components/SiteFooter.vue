@@ -29,7 +29,7 @@
 
       <div class="mt-8 pt-8 border-t border-gray-800 text-center">
         <p class="text-sm">
-          &copy; 2025 MyTechUniverse. All rights reserved.
+          &copy; 2026 MyTechUniverse. All rights reserved.
         </p>
       </div>
     </div>

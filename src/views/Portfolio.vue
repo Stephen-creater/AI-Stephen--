@@ -1,7 +1,9 @@
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
+import { gsap } from 'gsap'
 
 let portfolioController = null
+let activeCategory = 'all'
 
 const copyIcon = `
   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -42,117 +44,109 @@ async function copyText(text) {
 }
 
 onMounted(() => {
-      portfolioController = new AbortController()
-      const { signal } = portfolioController
+  portfolioController = new AbortController()
+  const { signal } = portfolioController
 
-      // 筛选按钮交互效果
-      const filterButtons = document.querySelectorAll('.filter-btn')
-      const projectCards = document.querySelectorAll('.project-card')
-      
-      // 初始化筛选功能
-      function filterProjects(category) {
-        projectCards.forEach(card => {
-          if (category === 'all' || card.dataset.category === category) {
-            card.style.display = '';
-            // 使用setTimeout添加淡入效果
-            setTimeout(() => {
-              card.style.opacity = '1';
-              card.style.transform = 'translateY(0)';
-            }, 50);
-          } else {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            // 等待过渡效果完成后隐藏元素
-            setTimeout(() => {
-              card.style.display = 'none';
-            }, 300);
-          }
-        });
+  const filterButtons = document.querySelectorAll('.filter-btn')
+  const projectCards = Array.from(document.querySelectorAll('.project-card'))
+
+  function revealCards(cards) {
+    gsap.fromTo(
+      cards,
+      { y: 22, opacity: 0, scale: 0.985, filter: 'blur(6px)' },
+      {
+        y: 0,
+        opacity: 1,
+        scale: 1,
+        filter: 'blur(0px)',
+        duration: 0.46,
+        stagger: 0.045,
+        ease: 'power2.out',
+        clearProps: 'filter',
       }
-      
-      // 设置筛选按钮点击事件
-      filterButtons.forEach(button => {
-          button.addEventListener('click', () => {
-          // 移除所有按钮的活跃状态
-          filterButtons.forEach(btn => {
-            btn.classList.remove('bg-purple-dark');
-            btn.classList.add('bg-gray-800');
-          });
-          
-          // 添加当前按钮活跃状态
-          button.classList.remove('bg-gray-800');
-          button.classList.add('bg-purple-dark');
-          
-          // 执行筛选
-          const category = button.dataset.category;
-          filterProjects(category);
-        }, { signal });
-      });
-          
-      // 卡片悬停效果增强
-          projectCards.forEach(card => {
-        card.addEventListener('mouseenter', () => {
-          card.style.transform = 'translateY(-5px)';
-          card.style.boxShadow = '0 18px 32px rgba(20, 20, 19, 0.08)';
-        }, { signal });
-        
-        card.addEventListener('mouseleave', () => {
-          setTimeout(() => {
-            // 只有在没有被筛选隐藏的情况下才重置transform
-            if (card.style.display !== 'none') {
-              card.style.transform = '';
-              card.style.boxShadow = '';
-            }
-          }, 150);
-        }, { signal });
-      });
-      
-      // 为所有项目卡片添加过渡效果
-      projectCards.forEach(card => {
-        card.style.transition = 'all 0.3s ease-in-out, opacity 0.3s ease-in-out, transform 0.3s ease-in-out';
-      });
-      
-      // 使用底部右侧的指纹按钮承接复制功能
-      document.querySelectorAll('.project-card').forEach(card => {
-        const copyButton = card.querySelector('button:not(.share-btn)');
-        const shareButton = card.querySelector('.share-btn');
-        const linkElement = card.querySelector('a[target="_blank"]');
-        const buttonRow = card.querySelector('.flex.justify-between.items-center.mt-4');
+    )
+  }
 
-        if (!copyButton || !linkElement || !buttonRow) return;
+  function filterProjects(category) {
+    activeCategory = category
+    const visibleCards = []
 
-        copyButton.classList.add('copy-fingerprint');
-        copyButton.setAttribute('type', 'button');
-        copyButton.setAttribute('title', '复制链接');
-        copyButton.setAttribute('aria-label', '复制链接');
-        copyButton.innerHTML = copyIcon;
-        linkElement.classList.add('visit-btn');
+    projectCards.forEach((card) => {
+      const matches =
+        category === 'all' ||
+        card.dataset.category === category ||
+        card.dataset.year === category
+      card.classList.toggle('is-filtered-out', !matches)
 
-        const actionBar = document.createElement('div');
-        actionBar.className = 'card-action-bar';
-        actionBar.appendChild(linkElement);
-        actionBar.appendChild(copyButton);
-        buttonRow.replaceWith(actionBar);
-
-        if (shareButton) shareButton.remove();
-
-        copyButton.addEventListener('click', function() {
-          const url = linkElement.getAttribute('href');
-          if (!url) return;
-
-          copyText(url).then((copied) => {
-            if (copied) {
-              this.innerHTML = copiedIcon;
-              this.classList.add('is-copied');
-              setTimeout(() => {
-                this.classList.remove('is-copied');
-                this.innerHTML = copyIcon;
-              }, 900);
-            }
-          });
-        }, { signal });
-      });
+      if (matches) {
+        card.style.display = ''
+        visibleCards.push(card)
+      } else {
+        card.style.display = 'none'
+      }
     })
+
+    requestAnimationFrame(() => revealCards(visibleCards))
+  }
+
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      filterButtons.forEach((btn) => {
+        btn.classList.remove('bg-purple-dark')
+        btn.classList.add('bg-gray-800')
+      })
+
+      button.classList.remove('bg-gray-800')
+      button.classList.add('bg-purple-dark')
+
+      const category = button.dataset.category || 'all'
+      if (category === activeCategory) return
+      filterProjects(category)
+    }, { signal })
+  })
+
+  revealCards(projectCards)
+
+  document.querySelectorAll('.project-card').forEach((card) => {
+    const copyButton = card.querySelector('button:not(.share-btn)')
+    const shareButton = card.querySelector('.share-btn')
+    const linkElement = card.querySelector('a[target="_blank"]')
+    const buttonRow = card.querySelector('.flex.justify-between.items-center.mt-4')
+
+    if (!copyButton || !linkElement || !buttonRow) return
+
+    copyButton.classList.add('copy-fingerprint')
+    copyButton.setAttribute('type', 'button')
+    copyButton.setAttribute('title', '复制链接')
+    copyButton.setAttribute('aria-label', '复制链接')
+    copyButton.innerHTML = copyIcon
+    linkElement.classList.add('visit-btn')
+
+    const actionBar = document.createElement('div')
+    actionBar.className = 'card-action-bar'
+    actionBar.appendChild(linkElement)
+    actionBar.appendChild(copyButton)
+    buttonRow.replaceWith(actionBar)
+
+    if (shareButton) shareButton.remove()
+
+    copyButton.addEventListener('click', function() {
+      const url = linkElement.getAttribute('href')
+      if (!url) return
+
+      copyText(url).then((copied) => {
+        if (copied) {
+          this.innerHTML = copiedIcon
+          this.classList.add('is-copied')
+          setTimeout(() => {
+            this.classList.remove('is-copied')
+            this.innerHTML = copyIcon
+          }, 900)
+        }
+      })
+    }, { signal })
+  })
+})
 
 onUnmounted(() => {
   portfolioController?.abort()
@@ -187,11 +181,10 @@ onUnmounted(() => {
             筛选类别:
           </div>
           <button class="filter-btn px-4 py-1.5 bg-purple-dark rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="all">所有</button>
-          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="coze">Coze</button>
-          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="cursor">Cursor</button>
+          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="year-26">26年</button>
+          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="year-25">25年</button>
+          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="year-24">24年</button>
           <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="wechat">公众号</button>
-          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="alipay">支付宝</button>
-          <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="clip">剪辑</button>
         </div>
         <div class="sticker-note sticker-note--green page-sticker">edited selections</div>
       </div>
@@ -203,7 +196,7 @@ onUnmounted(() => {
     <div class="container mx-auto px-4">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- 项目1: 淘票票电影海报 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1025&q=80" 
@@ -215,6 +208,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">淘票票电影海报</h3>
             <p class="text-gray-400 mb-3 text-sm">基于Coze平台开发的智能体，能够生成专业的电影海报设计，适用于淘票票应用。为电影宣传提供高质量的视觉素材。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Coze</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">AI设计</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">图像生成</span>
@@ -241,7 +235,7 @@ onUnmounted(() => {
       </div>
       
         <!-- 项目2: 批量提取抖音文案 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80" 
@@ -253,6 +247,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">批量提取抖音文案</h3>
             <p class="text-gray-400 mb-3 text-sm">基于Coze工作流开发的智能体，能够从多个抖音链接中批量提取文案内容，为内容创作者和营销人员提供高效的文本采集工具。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Coze</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">内容采集</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">自动化</span>
@@ -279,7 +274,7 @@ onUnmounted(() => {
         </div>
 
         <!-- 项目3: AI日报长图 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
@@ -291,6 +286,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">AI日报长图</h3>
             <p class="text-gray-400 mb-3 text-sm">基于Coze平台开发的智能体，自动收集并整理AI领域最新动态，生成精美的长图日报。为AI爱好者提供及时、高质量的行业资讯。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Coze</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">信息聚合</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">图像生成</span>
@@ -317,7 +313,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目4: 支付宝百宝箱创意奖作品 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="alipay">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="alipay" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=987&q=80" 
@@ -329,6 +325,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">支付宝百宝箱创意奖作品</h3>
             <p class="text-gray-400 mb-3 text-sm">在支付宝百宝箱第五期智能体大赛中获得创意奖的作品，利用先进的AI技术创造了创新的用户体验与实用解决方案。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">支付宝</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">获奖作品</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">AI应用</span>
@@ -355,7 +352,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目5: Coze智能体平台个人主页 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="coze" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
@@ -367,6 +364,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">Coze智能体平台个人主页</h3>
             <p class="text-gray-400 mb-3 text-sm">我在Coze智能体平台上创建了38个不同的智能体作品，涵盖多种功能和应用场景，展示了我在AI智能体领域的专业能力和创造力。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Coze</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">智能体开发</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">平台主页</span>
@@ -393,7 +391,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目6: Perplexity用户五要素分析 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
@@ -405,6 +403,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">Perplexity用户五要素分析</h3>
             <p class="text-gray-400 mb-3 text-sm">深入分析Perplexity用户行为的五个关键要素，提供全面的洞察和数据分析。通过Cursor平台构建的交互式数据分析工具。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">数据分析</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">用户研究</span>
@@ -431,7 +430,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目7: Gemini 2.5 Pro登顶AI编程 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1365&q=80" 
@@ -443,6 +442,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">Gemini 2.5 Pro登顶AI编程</h3>
             <p class="text-gray-400 mb-3 text-sm">详细分析Gemini 2.5 Pro在AI编程领域的突破性进展和技术优势，探讨其对开发者工作流程的影响和未来应用前景。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">AI研究</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">技术分析</span>
@@ -469,7 +469,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目8: 机器学习论文（决策树算法比较实验） -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1169&q=80" 
@@ -481,6 +481,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">决策树算法比较实验</h3>
             <p class="text-gray-400 mb-3 text-sm">机器学习领域学术论文，通过实验比较不同决策树算法的性能和准确率，包含详细的数据分析和可视化结果，为算法选择提供科学依据。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">机器学习</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">学术研究</span>
@@ -507,7 +508,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目9: 龙门面筋-美食瑰宝 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1065&q=80" 
@@ -519,6 +520,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">龙门面筋-美食瑰宝</h3>
             <p class="text-gray-400 mb-3 text-sm">探索中国传统美食龙门面筋的制作工艺、历史渊源及其独特魅力，通过多媒体呈现这一美食瑰宝的文化价值和地方特色。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">美食文化</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">传统工艺</span>
@@ -545,7 +547,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目10: 羊了个羊小游戏 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1511882150382-421056c89033?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80" 
@@ -557,6 +559,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">羊了个羊小游戏</h3>
             <p class="text-gray-400 mb-3 text-sm">基于前端技术开发的高人气消除类小游戏，玩家需要通过配对相同图案来消除卡片，挑战记忆力和策略思维，享受休闲娱乐体验。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">游戏开发</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">前端交互</span>
@@ -583,7 +586,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目11: 飞机大战小游戏 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="cursor" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1534732806146-b3bf32171b48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80" 
@@ -595,6 +598,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">飞机大战小游戏</h3>
             <p class="text-gray-400 mb-3 text-sm">经典射击类游戏，玩家控制战机击落敌方飞机，融合了HTML5 Canvas和JavaScript技术，通过精巧的游戏机制和流畅的操作体验带来紧张刺激的游戏乐趣。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Cursor</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">游戏开发</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">Canvas</span>
@@ -621,7 +625,7 @@ onUnmounted(() => {
         </div>
 
         <!-- 项目: AI创青春 | Start up 0809团队介绍 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
@@ -633,6 +637,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">【补档】AI创青春 | Start up 0809团队介绍</h3>
             <p class="text-gray-400 mb-3 text-sm">介绍我们的AI创业团队背景、核心成员和创新项目规划，展示团队在人工智能领域的专业能力和创新愿景。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">公众号</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">团队介绍</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">AI创业</span>
@@ -659,7 +664,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目: 【"职面"恐惧】第1期,大学生线上群面模拟活动 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
@@ -671,6 +676,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">精彩回顾 |【"职面"恐惧】第1期,大学生群面模拟</h3>
             <p class="text-gray-400 mb-3 text-sm">详细回顾咨询行业群面模拟活动的全过程，包括专业面试官点评与实用技巧分享，为大学生求职提供实战经验。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">公众号</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">求职技巧</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">群面模拟</span>
@@ -697,7 +703,7 @@ onUnmounted(() => {
         </div>
 
         <!-- 项目: 求职技巧分享｜无领导小组模拟 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
@@ -709,6 +715,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">求职技巧分享｜无领导小组模拟来啦~</h3>
             <p class="text-gray-400 mb-3 text-sm">深入讲解无领导小组讨论的流程、角色与应对策略，配合实际案例分析与现场模拟，帮助求职者掌握群面核心技巧。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">公众号</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">求职指导</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">无领导小组</span>
@@ -735,7 +742,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目: 求职技巧分享｜如何准备一次面试？ -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
@@ -747,6 +754,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">求职技巧分享｜如何准备一次面试？</h3>
             <p class="text-gray-400 mb-3 text-sm">全面解析面试前的准备工作，包括公司研究、自我介绍准备、常见问题应对和形象管理等关键环节，提供实用的面试准备清单。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">公众号</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">面试技巧</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">求职指南</span>
@@ -773,7 +781,7 @@ onUnmounted(() => {
         </div>
         
         <!-- 项目: 高能回顾 |【不安分青年工作坊】大厂职业规划师的干货分享 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="wechat" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
@@ -785,6 +793,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">高能回顾 |【不安分青年工作坊】大厂职业规划</h3>
             <p class="text-gray-400 mb-3 text-sm">来自顶级互联网公司的职业规划师分享求职与职业发展的核心策略，包括行业选择、个人定位和长期发展规划的实用指导。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">公众号</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">职业规划</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">大厂分享</span>
@@ -811,7 +820,7 @@ onUnmounted(() => {
         </div>
 
         <!-- 项目: 电影解说《银河护卫队3》 -->
-        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="clip">
+        <div class="project-card bg-gray-900 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-300" data-category="clip" data-year="year-24">
           <div class="h-48 md:h-56 overflow-hidden">
             <img 
               src="https://media.themoviedb.org/t/p/w1000_and_h563_face/A7JQ7MIV5fkIxceI5hizRIe6DRJ.jpg" 
@@ -823,6 +832,7 @@ onUnmounted(() => {
             <h3 class="text-xl font-bold mb-2">电影解说《银河护卫队3》</h3>
             <p class="text-gray-400 mb-3 text-sm">独立完成剪辑、文案和全流程设计的电影解说视频，通过精彩的视听语言和深入的剧情分析，为观众提供独特视角的《银河护卫队3》解读。</p>
             <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">24年</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">剪辑</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">文案创作</span>
               <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">电影解说</span>
@@ -855,6 +865,79 @@ onUnmounted(() => {
 </template>
 
 <style>
+    .project-card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(202, 158, 112, 0.14);
+      background:
+        linear-gradient(180deg, rgba(255, 251, 245, 0.96) 0%, rgba(255, 247, 238, 0.92) 100%);
+      box-shadow:
+        0 20px 38px rgba(150, 114, 73, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78);
+      transition:
+        transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 260ms ease,
+        border-color 260ms ease,
+        background-color 260ms ease;
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(217, 119, 87, 0.14), transparent 38%, transparent 72%, rgba(106, 155, 204, 0.08));
+      opacity: 0;
+      transition: opacity 260ms ease;
+    }
+
+    .project-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(217, 119, 87, 0.22);
+      box-shadow:
+        0 26px 48px rgba(150, 114, 73, 0.12),
+        0 0 0 1px rgba(217, 119, 87, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    }
+
+    .project-card:hover::before {
+      opacity: 1;
+    }
+
+    .project-card .h-48,
+    .project-card .h-48.md\:h-56 {
+      position: relative;
+    }
+
+    .project-card .h-48::after,
+    .project-card .h-48.md\:h-56::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(20, 20, 19, 0.1), transparent 52%);
+      opacity: 0.55;
+      transition: opacity 260ms ease;
+      pointer-events: none;
+    }
+
+    .project-card:hover .h-48::after,
+    .project-card:hover .h-48.md\:h-56::after {
+      opacity: 0.28;
+    }
+
+    .project-card img {
+      transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1), filter 520ms ease;
+      transform-origin: center;
+    }
+
+    .project-card:hover img {
+      transform: scale(1.045);
+      filter: saturate(1.04) contrast(1.02);
+    }
+
+    .project-card.is-filtered-out {
+      pointer-events: none;
+    }
 
     .project-card .copy-fingerprint {
       position: relative;
@@ -925,9 +1008,4 @@ onUnmounted(() => {
       box-shadow: none;
     }
 
-    .project-card:hover {
-      box-shadow: 0 18px 32px rgba(20, 20, 19, 0.08);
-      border-color: rgba(20, 20, 19, 0.08);
-    }
-  
 </style>

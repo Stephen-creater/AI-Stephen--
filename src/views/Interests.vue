@@ -301,6 +301,7 @@ function preloadMovieAssets(movieId) {
         modalContainer.insertAdjacentHTML('beforeend', modalHTML);
         
         modal.classList.add('open');
+        modal.scrollTop = 0;
         
         // 防止背景滚动
         document.body.style.overflow = 'hidden';
@@ -615,7 +616,7 @@ function preloadMovieAssets(movieId) {
   </section>
   
   <!-- Favorite Quotes Section -->
-  <section class="py-16" style="background: var(--bg-soft);">
+  <section class="py-16">
     <div class="container mx-auto px-4">
       <h2 class="text-5xl font-bold mb-6 text-center">经典台词</h2>
       <p class="text-gray-300 text-center mb-12 max-w-3xl mx-auto">
@@ -755,7 +756,7 @@ function preloadMovieAssets(movieId) {
   </section>
   
   <!-- Marvel Universe Infographic -->
-  <section class="py-16" style="background: var(--bg-soft);">
+  <section class="py-16">
     <div class="container mx-auto px-4">
       <h2 class="text-5xl font-bold mb-6 text-center">漫威宇宙时间线</h2>
       <p class="text-gray-300 text-center mb-12 max-w-3xl mx-auto">
@@ -1003,6 +1004,8 @@ function preloadMovieAssets(movieId) {
       width: 100%;
       max-width: 980px;
       min-height: 620px;
+      max-height: calc(100vh - 3rem);
+      margin: auto;
       background-color: #0A0C10;
       border-radius: 12px;
       overflow: hidden;
@@ -1050,6 +1053,8 @@ function preloadMovieAssets(movieId) {
       flex-direction: column;
       justify-content: flex-start;
       width: 62%;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
       padding: 2.3rem 2.6rem 2.1rem;
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 18%),
@@ -1059,7 +1064,7 @@ function preloadMovieAssets(movieId) {
     .movie-modal-title {
       margin-bottom: 1.75rem;
       padding-bottom: 1.25rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(32, 37, 48, 0.12);
     }
 
     .movie-modal-kicker {
@@ -1074,19 +1079,19 @@ function preloadMovieAssets(movieId) {
       font-size: clamp(2.2rem, 3vw, 2.9rem);
       font-weight: 700;
       margin-bottom: 0.65rem;
-      color: white;
+      color: #171923;
       line-height: 1.08;
       letter-spacing: -0.03em;
     }
 
     .movie-modal-subtitle {
-      color: rgba(232, 235, 242, 0.84);
+      color: rgba(46, 54, 69, 0.78);
       font-size: 1.02rem;
       line-height: 1.5;
     }
 
     .movie-modal-subtitle span {
-      color: rgba(232, 235, 242, 0.56);
+      color: rgba(46, 54, 69, 0.52);
     }
 
     .movie-modal-meta {
@@ -1100,7 +1105,7 @@ function preloadMovieAssets(movieId) {
 
     .movie-modal-meta p {
       margin: 0;
-      color: rgba(255, 255, 255, 0.88);
+      color: #2a3140;
       font-size: 1.02rem;
       line-height: 1.4;
     }
@@ -1108,7 +1113,7 @@ function preloadMovieAssets(movieId) {
     .movie-modal-meta p span {
       display: inline-block;
       margin-right: 0.55rem;
-      color: rgba(232, 235, 242, 0.5);
+      color: rgba(46, 54, 69, 0.56);
       font-size: 0.84rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -1206,19 +1211,16 @@ function preloadMovieAssets(movieId) {
     
     .modal {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background-color: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(5px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      place-items: center;
       padding: 2rem;
       z-index: 1000;
       opacity: 0;
       visibility: hidden;
+      overflow-y: auto;
       transition: opacity 0.3s ease, visibility 0.3s ease;
     }
     
