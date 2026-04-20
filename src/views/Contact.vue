@@ -223,25 +223,23 @@ let faqObserver = null
   
   
   <!-- Hero Section -->
-  <section class="pt-40 pb-20 relative overflow-hidden">
-    <div class="container mx-auto px-4">
-      <div class="max-w-3xl mx-auto text-center">
-        <h1 class="text-4xl md:text-5xl font-bold mb-6 glow-text">
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero__card page-hero__card--compact">
+        <div class="page-hero__eyebrow">Say hello</div>
+        <h1 class="page-title" style="max-width: none;">
           <span class="text-purple-light">联系</span>我
         </h1>
-        <p class="text-lg text-gray-300 mb-8 max-w-3xl mx-auto">
+        <p class="page-summary" style="margin-left: auto; margin-right: auto;">
           有项目合作、技术交流或其他问题？请随时联系我，我会尽快回复。
         </p>
+        <div class="sticker-note sticker-note--orange page-sticker">notes welcome</div>
       </div>
     </div>
-    
-    <!-- Purple glowing sphere (decorative element) -->
-    <div class="absolute w-72 h-72 md:w-96 md:h-96 rounded-full bg-purple-dark opacity-10 filter blur-3xl right-0 top-40 transform translate-x-1/2"></div>
-    <div class="absolute w-64 h-64 rounded-full bg-purple-dark opacity-10 filter blur-3xl left-0 bottom-0 transform -translate-x-1/2"></div>
   </section>
   
   <!-- Contact Section -->
-  <section class="pb-10 relative z-10 -mt-24">
+  <section class="pb-10 relative z-10">
     <div class="container mx-auto px-4">
       <div class="contact-section">
         <div class="contact-grid">
@@ -355,10 +353,10 @@ let faqObserver = null
   </section>
   
   <!-- FAQ Section -->
-  <section class="py-16 relative z-10 bg-black bg-opacity-30">
+  <section class="py-16 relative z-10">
     <div class="container mx-auto px-4">
       <div v-fade-in class="max-w-3xl mx-auto">
-        <h2 class="text-3xl font-bold mb-8 glow-text text-center">常见<span class="text-purple-light">问题</span></h2>
+        <h2 class="text-3xl font-bold mb-8 text-center">常见问题</h2>
         
         <div class="faq-container">
           <!-- FAQ Item 1 -->
@@ -440,49 +438,6 @@ let faqObserver = null
     </div>
   </section>
   
-  <!-- Footer -->
-  <footer class="bg-black bg-opacity-40 py-12">
-    <div class="container mx-auto px-4">
-      <div class="grid md:grid-cols-3 gap-8">
-        <div>
-          <h3 class="text-xl font-bold mb-4">My<span class="text-purple-light">Tech</span>Universe</h3>
-          <p class="text-gray-400">探索、创造与无限可能</p>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-medium mb-4">快速导航</h4>
-          <ul class="space-y-2">
-            <li><router-link to="/" class="text-gray-400 hover:text-white transition-colors">首页</router-link></li>
-            <li><router-link to="/portfolio" class="text-gray-400 hover:text-white transition-colors">作品</router-link></li>
-            <li><router-link to="/interests" class="text-gray-400 hover:text-white transition-colors">兴趣</router-link></li>
-            <li><router-link to="/knowledge" class="text-gray-400 hover:text-white transition-colors">知识库</router-link></li>
-            <li><router-link to="/contact" class="text-gray-400 hover:text-white transition-colors">联系我</router-link></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-medium mb-4">联系方式</h4>
-          <ul class="space-y-2">
-            <li class="text-gray-400">邮箱: yaonanye1@gmail.com</li>
-            <li class="text-gray-400">微信: thanoswillreturn</li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="mt-8 pt-8 border-t border-gray-800 text-center">
-        <p class="text-gray-500 text-sm">
-          &copy; 2025 MyTechUniverse. All rights reserved.
-        </p>
-      </div>
-    </div>
-  </footer>
-  
-  <!-- Scripts -->
-  
-  
-  
-  
-
   </div>
 </template>
 
@@ -686,8 +641,8 @@ let faqObserver = null
     
     .faq-item:hover {
       background-color: rgba(20, 24, 30, 0.7);
-      border-color: rgba(138, 43, 226, 0.2);
-      box-shadow: 0 5px 20px rgba(106, 13, 173, 0.15);
+      border-color: rgba(217, 119, 87, 0.22);
+      box-shadow: 0 10px 28px rgba(217, 119, 87, 0.12);
     }
     
     .faq-question {
@@ -722,7 +677,7 @@ let faqObserver = null
       align-items: center;
       justify-content: center;
       transition: transform 0.4s ease;
-      color: #8A2BE2;
+      color: var(--accent-orange);
       height: 24px;
       width: 24px;
     }

@@ -4,9 +4,46 @@ import { onMounted, onUnmounted } from 'vue'
 let knowledgeController = null
 let knowledgeObserver = null
 
+const copyIcon = `
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" />
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 20h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z" />
+  </svg>
+`
+
+const copiedIcon = `
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+  </svg>
+`
+
+async function copyText(text) {
+  if (!text) return false
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {}
+  try {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.setAttribute('readonly', '')
+    textarea.style.position = 'absolute'
+    textarea.style.left = '-9999px'
+    document.body.appendChild(textarea)
+    textarea.select()
+    textarea.setSelectionRange(0, textarea.value.length)
+    const copied = document.execCommand('copy')
+    document.body.removeChild(textarea)
+    return copied
+  } catch {
+    return false
+  }
+}
+
     // 改进UI元素样式
     function enhanceUIElements() {
-      // 增强"查看详情"链接
       document.querySelectorAll('.knowledge-card a.text-purple-light').forEach(link => {
         link.classList.add('details-link');
         link.innerHTML = `
@@ -17,7 +54,6 @@ let knowledgeObserver = null
         `;
       });
       
-      // 增强"飞书文档"标签
       document.querySelectorAll('.knowledge-card .bg-gray-800.text-purple-light').forEach(tag => {
         tag.classList.add('feishu-tag');
         tag.innerHTML = `
@@ -35,40 +71,51 @@ let knowledgeObserver = null
       
       knowledgeCards.forEach(card => {
         const link = card.querySelector('a[target="_blank"]');
+        const actionWrap = card.querySelector('.flex.justify-between.items-center');
+        const tag = actionWrap?.querySelector('.bg-gray-800.text-purple-light');
         if (!link) return;
         
-        // 创建分享按钮
-        const shareBtn = document.createElement('button');
-        shareBtn.className = 'share-btn';
-        shareBtn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-          </svg>
-        `;
-        card.appendChild(shareBtn);
-        
-        // 创建提示tooltip
-        const tooltip = document.createElement('div');
-        tooltip.className = 'copy-tooltip';
-        tooltip.textContent = '链接已复制!';
-        card.appendChild(tooltip);
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-fingerprint';
+        copyBtn.setAttribute('type', 'button');
+        copyBtn.setAttribute('aria-label', '复制链接');
+        copyBtn.setAttribute('title', '复制链接');
+        copyBtn.innerHTML = copyIcon;
+        link.classList.add('details-link');
+
+        if (actionWrap) {
+          const actionSection = document.createElement('div');
+          actionSection.className = 'knowledge-action-stack';
+
+          const actionBar = document.createElement('div');
+          actionBar.className = 'card-action-bar';
+          actionBar.appendChild(link);
+          actionBar.appendChild(copyBtn);
+          actionSection.appendChild(actionBar);
+
+          if (tag) {
+            actionSection.appendChild(tag);
+          }
+
+          actionWrap.replaceWith(actionSection);
+        }
         
         // 添加点击事件
-        shareBtn.addEventListener('click', async (e) => {
+        copyBtn.addEventListener('click', async (e) => {
           e.preventDefault();
           e.stopPropagation();
           
           try {
             const url = link.getAttribute('href');
-            await navigator.clipboard.writeText(url);
-            
-            // 显示提示
-            tooltip.style.opacity = '1';
-            
-            // 2秒后隐藏提示
-            setTimeout(() => {
-              tooltip.style.opacity = '0';
-            }, 1000);
+            const copied = await copyText(url);
+            if (copied) {
+              copyBtn.innerHTML = copiedIcon;
+              copyBtn.classList.add('is-copied');
+              setTimeout(() => {
+                copyBtn.classList.remove('is-copied');
+                copyBtn.innerHTML = copyIcon;
+              }, 900);
+            }
           } catch (err) {
             console.error('复制链接失败:', err);
           }
@@ -143,20 +190,19 @@ let knowledgeObserver = null
     
     
     <!-- Knowledge Hero Section -->
-    <section class="pt-40 pb-16 relative overflow-hidden">
-      <div class="container mx-auto px-4">
-        <div class="max-w-3xl mx-auto text-center">
-          <h1 class="text-4xl md:text-5xl font-bold mb-6 glow-text">
-            个人<span class="text-purple-light">知识库</span>
+    <section class="page-hero">
+      <div class="container">
+        <div class="page-hero__card page-hero__card--compact">
+          <div class="page-hero__eyebrow">Curated archive</div>
+          <h1 class="page-title" style="max-width: none;">
+            个人<span class="accent-word">知识库</span>
           </h1>
-          <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+          <p class="page-summary" style="margin-left: auto; margin-right: auto;">
             以下是我精心构建的个人知识体系，涵盖AI、写作、信息源等多个领域。全部开源分享，欢迎探索和学习。
           </p>
+          <div class="sticker-note sticker-note--blue page-sticker">soft knowledge systems</div>
         </div>
       </div>
-      
-      <!-- Purple glowing sphere (decorative element) -->
-      <div class="absolute w-72 h-72 md:w-96 md:h-96 rounded-full bg-purple-dark opacity-10 filter blur-3xl left-1/2 transform -translate-x-1/2 -bottom-48"></div>
     </section>
 
       <!-- Knowledge Categories Section -->
@@ -168,7 +214,7 @@ let knowledgeObserver = null
         <div class="knowledge-card p-6">
           <div class="flex items-center mb-4">
             <div class="p-3 rounded-full bg-purple-dark bg-opacity-30 mr-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-light" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: var(--accent-orange);">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             </div>
@@ -182,7 +228,6 @@ let knowledgeObserver = null
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </a>
-            <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
           </div>
         </div>
         
@@ -204,7 +249,6 @@ let knowledgeObserver = null
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </a>
-            <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
           </div>
         </div>
         
@@ -226,7 +270,6 @@ let knowledgeObserver = null
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </a>
-            <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
           </div>
         </div>
         
@@ -248,7 +291,6 @@ let knowledgeObserver = null
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </a>
-            <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
           </div>
         </div>
         
@@ -270,7 +312,6 @@ let knowledgeObserver = null
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </a>
-            <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
           </div>
         </div>
         
@@ -291,7 +332,6 @@ let knowledgeObserver = null
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                       </a>
-                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
                     </div>
                   </div>
                   
@@ -313,7 +353,6 @@ let knowledgeObserver = null
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                       </a>
-                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
                     </div>
                   </div>
                   
@@ -335,7 +374,6 @@ let knowledgeObserver = null
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                       </a>
-                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
                     </div>
                   </div>
                   
@@ -357,7 +395,6 @@ let knowledgeObserver = null
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                       </a>
-                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
                     </div>
                   </div>
                   
@@ -379,7 +416,6 @@ let knowledgeObserver = null
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                       </a>
-                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
                     </div>
                   </div>
                   
@@ -401,56 +437,12 @@ let knowledgeObserver = null
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                       </a>
-                      <span class="text-xs bg-gray-800 text-purple-light px-2.5 py-0.5 rounded-full">飞书文档</span>
                     </div>
                   </div>
                   
                 </div>
               </div>
             </section>
-  <!-- Footer -->
-  <footer class="bg-black bg-opacity-40 py-12">
-    <div class="container mx-auto px-4">
-      <div class="grid md:grid-cols-3 gap-8">
-        <div>
-          <h3 class="text-xl font-bold mb-4">My<span class="text-purple-light">Tech</span>Universe</h3>
-          <p class="text-gray-400">探索、创造与无限可能</p>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-medium mb-4">快速导航</h4>
-          <ul class="space-y-2">
-            <li><router-link to="/" class="text-gray-400 hover:text-white transition-colors">首页</router-link></li>
-            <li><router-link to="/portfolio" class="text-gray-400 hover:text-white transition-colors">作品</router-link></li>
-            <li><router-link to="/interests" class="text-gray-400 hover:text-white transition-colors">兴趣</router-link></li>
-            <li><router-link to="/knowledge" class="text-gray-400 hover:text-white transition-colors">知识库</router-link></li>
-            <li><router-link to="/contact" class="text-gray-400 hover:text-white transition-colors">联系我</router-link></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-medium mb-4">联系方式</h4>
-          <ul class="space-y-2">
-            <li class="text-gray-400">邮箱: yaonanye1@gmail.com</li>
-            <li class="text-gray-400">微信: thanoswillreturn</li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="mt-8 pt-8 border-t border-gray-800 text-center">
-        <p class="text-gray-500 text-sm">
-          &copy; 2025 MyTechUniverse. All rights reserved.
-        </p>
-      </div>
-    </div>
-  </footer>
-  
-  <!-- Scripts -->
-  
-  
-  
-  
-
   </div>
 </template>
 
@@ -471,14 +463,14 @@ let knowledgeObserver = null
     .knowledge-card:hover,
     .knowledge-card.hover-active {
       transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(106, 13, 173, 0.3);
-      background-color: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 14px 28px rgba(20, 20, 19, 0.08);
+      background-color: rgba(255, 252, 246, 0.96);
     }
     
     /* 知识库图标悬停效果 */
     .knowledge-card:hover .rounded-full,
     .knowledge-card.hover-active .rounded-full {
-      background-color: rgba(106, 13, 173, 0.5);
+      background-color: rgba(217, 119, 87, 0.16);
       transform: scale(1.05);
     }
     
@@ -497,8 +489,9 @@ let knowledgeObserver = null
     }
     
     .knowledge-card a.text-purple-light:hover {
-      border-bottom-color: rgba(138, 43, 226, 0.7);
-      text-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+      border-bottom-color: rgba(217, 119, 87, 0.35);
+      text-shadow: none;
+      color: var(--accent-orange);
     }
     
     .knowledge-card a.text-purple-light svg {
@@ -514,20 +507,23 @@ let knowledgeObserver = null
       position: relative;
       display: inline-flex;
       align-items: center;
-      padding: 6px 12px !important;
-      background-color: rgba(138, 43, 226, 0.1);
-      border-radius: 20px;
-      border: 1px solid rgba(138, 43, 226, 0.2) !important;
+      padding: 0 !important;
+      background-color: transparent;
+      border-radius: 0;
+      border: none !important;
       font-weight: 500;
       transition: all 0.3s ease !important;
-      box-shadow: 0 0 5px rgba(138, 43, 226, 0.1);
+      box-shadow: none;
+      text-decoration: underline;
+      text-underline-offset: 0.22em;
     }
     
     .details-link:hover {
-      background-color: rgba(138, 43, 226, 0.2);
-      border-color: rgba(138, 43, 226, 0.4) !important;
-      box-shadow: 0 0 12px rgba(138, 43, 226, 0.2);
-      transform: translateY(-1px);
+      background-color: transparent;
+      border-color: transparent !important;
+      box-shadow: none;
+      transform: none;
+      color: var(--accent-orange);
     }
     
     .details-link span {
@@ -536,94 +532,66 @@ let knowledgeObserver = null
     
     /* 飞书文档标签样式优化 */
     .knowledge-card .bg-gray-800.text-purple-light {
-      background-color: rgba(106, 13, 173, 0.15);
-      border: 1px solid rgba(138, 43, 226, 0.3);
+      background-color: var(--bg-soft);
+      border: 1px solid rgba(20, 20, 19, 0.06);
       padding: 4px 10px;
-      border-radius: 16px;
+      border-radius: 4px;
       font-weight: 500;
       letter-spacing: 0.3px;
-      box-shadow: 0 0 10px rgba(138, 43, 226, 0.2);
+      box-shadow: none;
       transition: all 0.3s ease;
+      color: var(--muted);
+      font-family: var(--font-mono);
     }
     
     .knowledge-card:hover .bg-gray-800.text-purple-light {
-      background-color: rgba(106, 13, 173, 0.25);
-      box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+      background-color: var(--bg-soft);
+      box-shadow: none;
     }
     
     /* 飞书文档标签增强样式 */
     .feishu-tag {
       display: inline-flex;
       align-items: center;
-      background-color: rgba(106, 13, 173, 0.15) !important;
-      border: 1px solid rgba(138, 43, 226, 0.3) !important;
+      background-color: var(--bg-soft) !important;
+      border: 1px solid rgba(20, 20, 19, 0.06) !important;
       padding: 4px 10px !important;
-      border-radius: 16px !important;
+      border-radius: 4px !important;
       font-weight: 500 !important;
       letter-spacing: 0.3px;
-      box-shadow: 0 0 10px rgba(138, 43, 226, 0.2);
+      box-shadow: none;
       transition: all 0.3s ease;
+      color: var(--muted) !important;
+      font-family: var(--font-mono);
     }
     
     .knowledge-card:hover .feishu-tag {
-      background-color: rgba(106, 13, 173, 0.25) !important;
-      box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+      background-color: var(--bg-soft) !important;
+      box-shadow: none;
     }
     
-    /* 链接复制提示样式 */
-    .copy-tooltip {
-      position: absolute;
-      background-color: rgba(138, 43, 226, 0.9);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      z-index: 1000;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      text-align: center;
-      white-space: nowrap;
-      top: 15px;
-      right: 55px;
-    }
-    
-    .copy-tooltip::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      right: -5px;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-top: 5px solid transparent;
-      border-bottom: 5px solid transparent;
-      border-left: 5px solid rgba(138, 43, 226, 0.9);
-    }
-    
-    /* 分享按钮样式 */
-    .share-btn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background-color: rgba(0, 0, 0, 0.3);
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+    .copy-fingerprint {
+      position: relative;
       z-index: 10;
-      transition: all 0.2s ease;
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--muted);
+      align-self: center;
     }
     
-    .share-btn:hover {
-      background-color: rgba(106, 13, 173, 0.7);
-      color: white;
-      transform: scale(1.1);
+    .copy-fingerprint:hover {
+      color: var(--accent-orange);
+    }
+
+    .copy-fingerprint.is-copied {
+      color: var(--accent-orange);
+      transform: translateY(-1px);
+    }
+
+    .knowledge-action-stack .feishu-tag {
+      width: fit-content;
+    }
+
+    .knowledge-action-stack .card-action-bar {
+      margin-top: 0;
     }
     
     /* 动画效果 */

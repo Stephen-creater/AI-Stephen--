@@ -3,6 +3,44 @@ import { onMounted, onUnmounted } from 'vue'
 
 let portfolioController = null
 
+const copyIcon = `
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" />
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 20h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z" />
+  </svg>
+`
+
+const copiedIcon = `
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+  </svg>
+`
+
+async function copyText(text) {
+  if (!text) return false
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {}
+  try {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.setAttribute('readonly', '')
+    textarea.style.position = 'absolute'
+    textarea.style.left = '-9999px'
+    document.body.appendChild(textarea)
+    textarea.select()
+    textarea.setSelectionRange(0, textarea.value.length)
+    const copied = document.execCommand('copy')
+    document.body.removeChild(textarea)
+    return copied
+  } catch {
+    return false
+  }
+}
+
 onMounted(() => {
       portfolioController = new AbortController()
       const { signal } = portfolioController
@@ -54,8 +92,8 @@ onMounted(() => {
       // 卡片悬停效果增强
           projectCards.forEach(card => {
         card.addEventListener('mouseenter', () => {
-          card.classList.add('shadow-lg', 'shadow-purple-900/20');
           card.style.transform = 'translateY(-5px)';
+          card.style.boxShadow = '0 18px 32px rgba(20, 20, 19, 0.08)';
         }, { signal });
         
         card.addEventListener('mouseleave', () => {
@@ -63,6 +101,7 @@ onMounted(() => {
             // 只有在没有被筛选隐藏的情况下才重置transform
             if (card.style.display !== 'none') {
               card.style.transform = '';
+              card.style.boxShadow = '';
             }
           }, 150);
         }, { signal });
@@ -73,96 +112,46 @@ onMounted(() => {
         card.style.transition = 'all 0.3s ease-in-out, opacity 0.3s ease-in-out, transform 0.3s ease-in-out';
       });
       
-      // 找到所有分享按钮 - 查找包含分享图标SVG路径的按钮
+      // 使用底部右侧的指纹按钮承接复制功能
       document.querySelectorAll('.project-card').forEach(card => {
-        const buttons = card.querySelectorAll('button');
-        buttons.forEach(button => {
-          const svgPath = button.querySelector('path');
-          if (svgPath && svgPath.getAttribute('d').startsWith('M8.684 13.342')) {
-            // 这是一个分享按钮
-            button.classList.add('share-btn');
-            button.setAttribute('title', '复制链接');
-          }
-        });
-      });
-      
-      // 添加复制链接功能
-      const shareButtons = document.querySelectorAll('.share-btn');
-      
-      shareButtons.forEach(button => {
-        button.addEventListener('click', function() {
-          // 获取当前卡片内的链接地址
-          const card = this.closest('.project-card');
-          const linkElement = card.querySelector('a[target="_blank"]');
+        const copyButton = card.querySelector('button:not(.share-btn)');
+        const shareButton = card.querySelector('.share-btn');
+        const linkElement = card.querySelector('a[target="_blank"]');
+        const buttonRow = card.querySelector('.flex.justify-between.items-center.mt-4');
+
+        if (!copyButton || !linkElement || !buttonRow) return;
+
+        copyButton.classList.add('copy-fingerprint');
+        copyButton.setAttribute('type', 'button');
+        copyButton.setAttribute('title', '复制链接');
+        copyButton.setAttribute('aria-label', '复制链接');
+        copyButton.innerHTML = copyIcon;
+        linkElement.classList.add('visit-btn');
+
+        const actionBar = document.createElement('div');
+        actionBar.className = 'card-action-bar';
+        actionBar.appendChild(linkElement);
+        actionBar.appendChild(copyButton);
+        buttonRow.replaceWith(actionBar);
+
+        if (shareButton) shareButton.remove();
+
+        copyButton.addEventListener('click', function() {
           const url = linkElement.getAttribute('href');
-          
-          // 复制到剪贴板
-          navigator.clipboard.writeText(url).then(() => {
-            // 创建并显示复制成功提示
-            showCopyTooltip(this);
-          }).catch(err => {
-            console.error('复制失败:', err);
+          if (!url) return;
+
+          copyText(url).then((copied) => {
+            if (copied) {
+              this.innerHTML = copiedIcon;
+              this.classList.add('is-copied');
+              setTimeout(() => {
+                this.classList.remove('is-copied');
+                this.innerHTML = copyIcon;
+              }, 900);
+            }
           });
         }, { signal });
       });
-      
-      // 显示复制成功提示
-      function showCopyTooltip(element) {
-        // 检查是否已存在提示，避免重复创建
-        const existingTooltip = document.querySelector('.copy-tooltip');
-        if (existingTooltip) {
-          existingTooltip.remove();
-        }
-        
-        // 创建提示元素
-        const tooltip = document.createElement('div');
-        tooltip.className = 'copy-tooltip';
-        tooltip.textContent = '复制成功';
-        
-        // 先添加到DOM中以便获取尺寸
-        document.body.appendChild(tooltip);
-        
-        // 定位提示元素
-        const rect = element.getBoundingClientRect();
-        const scrollTop = window.scrollY || document.documentElement.scrollTop;
-        
-        // 计算位置，确保在窗口可见范围内
-        const tooltipWidth = tooltip.offsetWidth;
-        let leftPos = rect.left + rect.width/2 - tooltipWidth/2;
-        
-        // 确保不超出屏幕左右边界
-        if (leftPos < 10) leftPos = 10;
-        if (leftPos + tooltipWidth > window.innerWidth - 10) {
-          leftPos = window.innerWidth - tooltipWidth - 10;
-        }
-        
-        tooltip.style.left = leftPos + 'px';
-        // 调整垂直位置，确保足够的间距
-        tooltip.style.top = (rect.top - tooltip.offsetHeight - 20) + scrollTop + 'px';
-        
-        // 显示提示
-        setTimeout(() => {
-          tooltip.style.opacity = '1';
-        }, 10);
-        
-        // 添加动画效果到分享按钮
-        element.classList.add('text-purple-light');
-        element.style.transform = 'scale(1.2)';
-        setTimeout(() => {
-          element.style.transform = '';
-          setTimeout(() => {
-            element.classList.remove('text-purple-light');
-          }, 300);
-        }, 300);
-        
-        // 2秒后移除提示
-        setTimeout(() => {
-          tooltip.style.opacity = '0';
-          setTimeout(() => {
-            tooltip.remove();
-          }, 300);
-        }, 2000);
-      }
     })
 
 onUnmounted(() => {
@@ -179,17 +168,18 @@ onUnmounted(() => {
   
   
   <!-- Portfolio Hero Section -->
-  <section class="pt-40 pb-0 relative overflow-hidden">
-    <div class="container mx-auto px-4">
-      <div class="max-w-3xl mx-auto text-center">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4 glow-text">
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero__card page-hero__card--compact">
+        <div class="page-hero__eyebrow">Selected archive</div>
+        <h1 class="page-title" style="max-width: none;">
           我的作品集
         </h1>
-        <p class="text-lg md:text-xl text-gray-300 mb-6 max-w-3xl mx-auto">
+        <p class="page-summary" style="margin-left: auto; margin-right: auto;">
           探索我设计和开发的各类项目，包括游戏、工具应用以及AI相关作品，每一个作品都凝聚了创意和技术的结晶。
         </p>
         
-        <div class="flex flex-wrap items-center justify-center gap-2 mb-6">
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-2 mt-8">
           <div class="text-purple-light flex items-center text-sm md:text-base mr-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
@@ -203,11 +193,9 @@ onUnmounted(() => {
           <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="alipay">支付宝</button>
           <button class="filter-btn px-4 py-1.5 bg-gray-800 rounded-lg hover:bg-purple-light transition-colors text-white text-sm" data-category="clip">剪辑</button>
         </div>
+        <div class="sticker-note sticker-note--green page-sticker">edited selections</div>
       </div>
     </div>
-    
-    <!-- Purple glowing sphere (decorative element) -->
-    <div class="absolute w-72 h-72 md:w-96 md:h-96 rounded-full bg-purple-dark opacity-10 filter blur-3xl -right-24 -bottom-24"></div>
   </section>
   
   <!-- Portfolio Grid -->
@@ -863,166 +851,51 @@ onUnmounted(() => {
     </div>
   </section>
   
-  <!-- Footer -->
-  <footer class="bg-black bg-opacity-40 py-8 mt-8">
-    <div class="container mx-auto px-4">
-      <div class="grid md:grid-cols-3 gap-6">
-        <div>
-          <h3 class="text-xl font-bold mb-3">My<span class="text-purple-light">Tech</span>Universe</h3>
-          <p class="text-gray-400 text-sm">探索、创造与无限可能</p>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-medium mb-3">快速导航</h4>
-          <ul class="space-y-1.5">
-            <li><router-link to="/" class="text-gray-400 hover:text-white transition-colors text-sm">首页</router-link></li>
-            <li><router-link to="/portfolio" class="text-gray-400 hover:text-white transition-colors text-sm">作品</router-link></li>
-            <li><router-link to="/interests" class="text-gray-400 hover:text-white transition-colors text-sm">兴趣</router-link></li>
-            <li><router-link to="/knowledge" class="text-gray-400 hover:text-white transition-colors text-sm">知识库</router-link></li>
-            <li><router-link to="/contact" class="text-gray-400 hover:text-white transition-colors text-sm">联系我</router-link></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-medium mb-3">联系方式</h4>
-          <ul class="space-y-1.5">
-            <li class="text-gray-400 text-sm">邮箱: yaonanye1@gmail.com</li>
-            <li class="text-gray-400 text-sm">微信: thanoswillreturn</li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="mt-6 pt-6 border-t border-gray-800 text-center">
-        <p class="text-gray-500 text-sm">
-          &copy; 2025 MyTechUniverse. All rights reserved.
-        </p>
-      </div>
-    </div>
-  </footer>
-  
-  <!-- Scripts -->
-  
-  
-  
-  
-
   </div>
 </template>
 
 <style>
 
-    .copy-tooltip {
-      position: absolute;
-      background-color: rgba(138, 43, 226, 0.9);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      z-index: 1000;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      text-align: center;
-      white-space: nowrap;
-      top: -40px; /* 增加距离，避免与原来的提示重叠 */
-    }
-    
-    .copy-tooltip::after {
-      content: '';
-      position: absolute;
-      bottom: -4px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 5px solid rgba(138, 43, 226, 0.9);
-    }
-    
-    .project-card .share-btn {
-      cursor: pointer;
+    .project-card .copy-fingerprint {
       position: relative;
-      transition: all 0.2s ease;
+      flex: 0 0 auto;
+      color: var(--muted);
+      align-self: center;
     }
     
-    .project-card .share-btn:hover {
-      color: var(--purple-light);
-      transform: scale(1.1);
+    .project-card .copy-fingerprint:hover {
+      color: var(--accent-orange);
     }
     
-    .project-card .share-btn:active {
-      transform: scale(0.95);
+    .project-card .copy-fingerprint:active {
+      transform: translateY(0) scale(0.96);
     }
-    
-    /* 修改提示箭头悬浮效果，解决重叠问题 */
-    .project-card .share-btn::before {
-      content: attr(title);
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      padding: 4px 8px;
-      border-radius: 4px;
-      background-color: rgba(138, 43, 226, 0.9);
-      color: white;
-      font-size: 12px;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: all 0.2s ease;
-      visibility: hidden;
-      z-index: 1005; /* 确保在复制成功提示之上 */
-      margin-bottom: 10px; /* 增加间距，避免重叠 */
-    }
-    
-    .project-card .share-btn::after {
-      content: '';
-      position: absolute;
-      bottom: calc(100% - 5px);
-      left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      border-width: 5px 5px 0;
-      border-style: solid;
-      border-color: rgba(138, 43, 226, 0.9) transparent transparent;
-      opacity: 0;
-      transition: all 0.2s ease;
-      visibility: hidden;
-      z-index: 1005; /* 确保与上面的提示保持一致 */
-    }
-    
-    /* 当鼠标悬停在分享按钮上时，隐藏复制成功提示 */
-    .project-card .share-btn:hover + .copy-tooltip {
-      opacity: 0 !important;
-      visibility: hidden !important;
-    }
-    
-    .project-card .share-btn:hover::before,
-    .project-card .share-btn:hover::after {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-      visibility: visible;
+
+    .project-card .copy-fingerprint.is-copied {
+      color: var(--accent-orange);
+      transform: translateY(-1px);
     }
 
     /* 增强访问作品链接样式 */
     .project-card a.text-purple-light {
       display: inline-flex;
       align-items: center;
-      background-color: rgba(138, 43, 226, 0.1);
-      border: 1px solid rgba(138, 43, 226, 0.2);
-      border-radius: 20px;
-      padding: 6px 14px;
+      background-color: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 6px 0;
       font-weight: 500;
       transition: all 0.3s ease;
-      box-shadow: 0 0 8px rgba(138, 43, 226, 0.1);
+      box-shadow: none;
+      text-decoration: underline;
+      text-underline-offset: 0.22em;
+      color: var(--ink);
     }
     
     .project-card a.text-purple-light:hover {
-      background-color: rgba(138, 43, 226, 0.2);
-      border-color: rgba(138, 43, 226, 0.4);
-      box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
-      transform: translateY(-2px);
+      color: var(--accent-orange);
+      box-shadow: none;
+      transform: none;
     }
     
     .project-card a.text-purple-light svg {
@@ -1035,18 +908,26 @@ onUnmounted(() => {
     
     /* 增强标签样式 */
     .project-card .text-xs.bg-gray-800.text-purple-light {
-      background-color: rgba(106, 13, 173, 0.15);
-      border: 1px solid rgba(138, 43, 226, 0.3);
-      box-shadow: 0 0 8px rgba(138, 43, 226, 0.1);
+      background-color: var(--bg-soft);
+      border: 1px solid rgba(20, 20, 19, 0.06);
+      box-shadow: none;
       padding: 4px 10px;
       font-weight: 500;
       letter-spacing: 0.3px;
-      transition: all 0.3s ease;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      border-radius: 4px;
     }
     
     .project-card:hover .text-xs.bg-gray-800.text-purple-light {
-      background-color: rgba(106, 13, 173, 0.25);
-      box-shadow: 0 0 12px rgba(138, 43, 226, 0.2);
+      background-color: var(--bg-soft);
+      box-shadow: none;
+    }
+
+    .project-card:hover {
+      box-shadow: 0 18px 32px rgba(20, 20, 19, 0.08);
+      border-color: rgba(20, 20, 19, 0.08);
     }
   
 </style>

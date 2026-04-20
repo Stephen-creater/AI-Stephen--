@@ -2,6 +2,7 @@
 import { nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Navbar from './components/Navbar.vue'
+import SiteFooter from './components/SiteFooter.vue'
 
 const route = useRoute()
 
@@ -24,10 +25,13 @@ watch(
 </script>
 
 <template>
-  <div>
+  <div class="app-shell">
     <Navbar />
-    <router-view v-slot="{ Component }">
-      <component :is="Component" />
-    </router-view>
+    <main class="page-frame">
+      <router-view v-slot="{ Component }">
+        <component :is="Component" />
+      </router-view>
+    </main>
+    <SiteFooter />
   </div>
 </template>

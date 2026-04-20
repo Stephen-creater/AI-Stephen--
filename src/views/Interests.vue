@@ -2,6 +2,32 @@
 import { onMounted, onUnmounted } from 'vue'
 
 let interestsController = null
+const preloadedImageUrls = new Set()
+
+function optimizeGalleryImage(url) {
+  if (!url) return url
+
+  return url
+    .replace('/w1000_and_h563_face/', '/w533_and_h300_face/')
+    .replace('/w1066_and_h600_bestv2/', '/w533_and_h300_bestv2/')
+}
+
+function preloadImage(url) {
+  if (!url || preloadedImageUrls.has(url)) return
+
+  const image = new Image()
+  image.decoding = 'async'
+  image.src = url
+  preloadedImageUrls.add(url)
+}
+
+function preloadMovieAssets(movieId) {
+  const movie = movieData[movieId]
+  if (!movie) return
+
+  preloadImage(movie.poster)
+  movie.images?.slice(0, 3).forEach((img) => preloadImage(optimizeGalleryImage(img)))
+}
 
     // 电影详情数据
     const movieData = {
@@ -211,17 +237,20 @@ let interestsController = null
       const modalHTML = `
         <div class="movie-modal-header">
           <div class="movie-modal-poster">
-            <img src="${movie.poster}" alt="${movie.title}">
+            <img src="${movie.poster}" alt="${movie.title}" loading="eager" fetchpriority="high" decoding="async">
           </div>
         </div>
         <div class="movie-modal-content">
           <div class="movie-modal-title">
+            <div class="movie-modal-kicker">Marvel Collection</div>
             <h2>${movie.title}</h2>
-            <p class="text-gray-400">${movie.englishTitle} (${movie.year})</p>
-            <p class="text-gray-400 mt-2">导演: ${movie.director}</p>
-            <div class="flex items-center mt-3">
-              <span class="star text-yellow-400 mr-1">★</span>
-              <span class="text-yellow-400 font-bold">${movie.rating}</span>
+            <p class="movie-modal-subtitle">${movie.englishTitle} <span>(${movie.year})</span></p>
+            <div class="movie-modal-meta">
+              <p><span>导演</span>${movie.director}</p>
+              <div class="movie-modal-rating">
+                <span class="star">★</span>
+                <span>${movie.rating}</span>
+              </div>
             </div>
           </div>
           <div class="movie-modal-info">
@@ -239,7 +268,7 @@ let interestsController = null
             <div class="movie-modal-section">
               <h3>剧照</h3>
               <div class="movie-modal-gallery">
-                ${movie.images.map(img => `<img src="${img}" alt="${movie.title} 剧照" loading="lazy">`).join('')}
+                ${movie.images.map(img => `<img src="${optimizeGalleryImage(img)}" alt="${movie.title} 剧照" loading="eager" decoding="async">`).join('')}
               </div>
             </div>
             ` : ''}
@@ -252,6 +281,8 @@ let interestsController = null
       const modalContainer = document.getElementById('modal-content');
       
       if (modalContainer) {
+        preloadMovieAssets(movieId);
+
         // 清除之前的内容
         modalContainer.innerHTML = '';
         
@@ -319,6 +350,14 @@ let interestsController = null
             }
           }
         }, { signal });
+
+        const movieButton = card.querySelector('button[data-modal-source]');
+        const movieId = movieButton?.getAttribute('data-modal-source');
+
+        if (movieId) {
+          card.addEventListener('mouseenter', () => preloadMovieAssets(movieId), { signal });
+          card.addEventListener('focusin', () => preloadMovieAssets(movieId), { signal });
+        }
       });
       
       // 为详情按钮添加点击事件
@@ -346,27 +385,26 @@ let interestsController = null
   
   
   <!-- Interests Hero Section -->
-  <section class="pt-56 pb-10 relative overflow-hidden">
-    <div class="container mx-auto px-4">
-      <div class="max-w-3xl mx-auto text-center">
-        <h1 class="text-5xl font-bold mb-10 glow-text">
-          <span class="text-white">漫威宇宙</span>与<span class="text-purple-light">科幻世界</span>
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero__card page-hero__card--compact">
+        <div class="page-hero__eyebrow">Private canon</div>
+        <h1 class="page-title" style="max-width: 12ch; margin-left: auto; margin-right: auto;">
+          <span>漫威宇宙</span>与<span class="accent-word">科幻世界</span>
         </h1>
-        <p class="text-xl text-gray-300 mb-12">
+        <p class="page-summary" style="margin-left: auto; margin-right: auto;">
           这里记录了我喜欢的漫威科幻电影、经典台词和影评感想。<br>
           <span class="text-sm text-gray-400 mt-3 block">A space dedicated to my favorite Marvel sci-fi movies, quotes, and reviews.</span>
         </p>
+        <div class="sticker-note sticker-note--green page-sticker">kept for joy</div>
       </div>
     </div>
-    
-    <!-- Purple glowing sphere (decorative element) -->
-    <div class="absolute w-96 h-96 rounded-full bg-purple-dark opacity-10 filter blur-3xl left-1/2 transform -translate-x-1/2 -bottom-48"></div>
   </section>
   
   <!-- Marvel Movies Showcase -->
   <section class="py-12">
     <div class="container mx-auto px-4">
-      <h2 class="text-5xl font-bold mb-12 glow-text text-center">Marvel 电影精选</h2>
+      <h2 class="text-5xl font-bold mb-12 text-center">Marvel 电影精选</h2>
       
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <!-- Movie Card: 钢铁侠 (Iron Man) -->
@@ -577,9 +615,9 @@ let interestsController = null
   </section>
   
   <!-- Favorite Quotes Section -->
-  <section class="py-16 bg-black bg-opacity-30">
+  <section class="py-16" style="background: var(--bg-soft);">
     <div class="container mx-auto px-4">
-      <h2 class="text-5xl font-bold mb-6 glow-text text-center">经典台词</h2>
+      <h2 class="text-5xl font-bold mb-6 text-center">经典台词</h2>
       <p class="text-gray-300 text-center mb-12 max-w-3xl mx-auto">
         这些是我最喜欢的漫威电影台词，它们激励着我，给我力量。
         <span class="block text-sm text-gray-400 mt-1">My favorite Marvel quotes that inspire and empower me.</span>
@@ -587,52 +625,52 @@ let interestsController = null
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Quote 1 -->
-        <div v-fade-in class="card">
+        <div v-fade-in class="card quote-card">
           <div class="flex items-start">
-            <div class="text-purple-light text-5xl font-bold mr-4">"</div>
+            <div class="text-3xl font-bold mr-4" style="color: var(--muted-soft);">"</div>
             <div>
               <p class="text-lg mb-4">如果我们不能保护地球，我们一定会为它复仇。</p>
               <p class="text-sm text-gray-400 mb-2">If we can't protect the Earth, you can be damn well sure we'll avenge it.</p>
-              <p class="text-purple-light">—— 钢铁侠 / Iron Man</p>
+              <p style="color: var(--accent-orange);">—— 钢铁侠 / Iron Man</p>
               <p class="text-xs text-gray-500">《复仇者联盟》(2012)</p>
             </div>
           </div>
         </div>
         
         <!-- Quote 2 -->
-        <div v-fade-in class="card">
+        <div v-fade-in class="card quote-card">
           <div class="flex items-start">
-            <div class="text-purple-light text-5xl font-bold mr-4">"</div>
+            <div class="text-3xl font-bold mr-4" style="color: var(--muted-soft);">"</div>
             <div>
               <p class="text-lg mb-4">我是格鲁特。</p>
               <p class="text-sm text-gray-400 mb-2">I am Groot.</p>
-              <p class="text-purple-light">—— 格鲁特 / Groot</p>
+              <p style="color: var(--accent-orange);">—— 格鲁特 / Groot</p>
               <p class="text-xs text-gray-500">《银河护卫队》(2014)</p>
             </div>
           </div>
         </div>
         
         <!-- Quote 3 -->
-        <div v-fade-in class="card">
+        <div v-fade-in class="card quote-card">
           <div class="flex items-start">
-            <div class="text-purple-light text-5xl font-bold mr-4">"</div>
+            <div class="text-3xl font-bold mr-4" style="color: var(--muted-soft);">"</div>
             <div>
               <p class="text-lg mb-4">大多数人在混乱中看到威胁，而我看到的是机会。机会破坏秩序，带来自由。</p>
               <p class="text-sm text-gray-400 mb-2">In chaos, there is opportunity. Opportunity to break free of our chains.</p>
-              <p class="text-purple-light">—— 洛基 / Loki</p>
+              <p style="color: var(--accent-orange);">—— 洛基 / Loki</p>
               <p class="text-xs text-gray-500">《雷神》(2011)</p>
             </div>
           </div>
         </div>
         
         <!-- Quote 4 -->
-        <div v-fade-in class="card">
+        <div v-fade-in class="card quote-card">
           <div class="flex items-start">
-            <div class="text-purple-light text-5xl font-bold mr-4">"</div>
+            <div class="text-3xl font-bold mr-4" style="color: var(--muted-soft);">"</div>
             <div>
               <p class="text-lg mb-4">无论输赢，总要勇敢去做，这才是英雄。</p>
               <p class="text-sm text-gray-400 mb-2">The measure of a person, of a hero, is how well they succeed at being who they are.</p>
-              <p class="text-purple-light">—— 瓦尔基里 / Valkyrie</p>
+              <p style="color: var(--accent-orange);">—— 瓦尔基里 / Valkyrie</p>
               <p class="text-xs text-gray-500">《雷神：诸神黄昏》(2017)</p>
             </div>
           </div>
@@ -644,7 +682,7 @@ let interestsController = null
   <!-- Movie Rankings Section -->
   <section class="py-16">
     <div class="container mx-auto px-4">
-      <h2 class="text-5xl font-bold mb-6 glow-text text-center">我的漫威电影榜单</h2>
+      <h2 class="text-5xl font-bold mb-6 text-center">我的漫威电影榜单</h2>
       <p class="text-gray-300 text-center mb-12 max-w-3xl mx-auto">
         以下是我心目中的漫威电影排名，基于个人喜好和观影体验。
         <span class="block text-sm text-gray-400 mt-1">My personal ranking of Marvel movies based on enjoyment and viewing experience.</span>
@@ -653,62 +691,62 @@ let interestsController = null
       <div class="max-w-2xl mx-auto">
         <div class="space-y-6">
           <!-- Rank 1 -->
-          <div v-fade-in class="card bg-gradient-to-r from-transparent to-purple-dark bg-opacity-10">
+          <div v-fade-in class="card">
             <div class="flex items-center">
-              <div class="text-4xl font-bold text-purple-light mr-6">1</div>
+              <div class="text-4xl font-bold mr-6" style="color: var(--accent-orange);">1</div>
               <div class="flex-1">
                 <h3 class="text-xl font-bold">复仇者联盟：无限战争</h3>
                 <p class="text-sm text-gray-300">Avengers: Infinity War (2018)</p>
               </div>
-              <div class="text-xl font-bold text-purple-light">9.5</div>
+              <div class="text-xl font-bold" style="color: var(--accent-orange);">9.5</div>
             </div>
           </div>
           
           <!-- Rank 2 -->
           <div v-fade-in class="card">
             <div class="flex items-center">
-              <div class="text-4xl font-bold text-purple-light mr-6">2</div>
+              <div class="text-4xl font-bold mr-6" style="color: var(--accent-orange);">2</div>
               <div class="flex-1">
                 <h3 class="text-xl font-bold">银河护卫队</h3>
                 <p class="text-sm text-gray-300">Guardians of the Galaxy (2014)</p>
               </div>
-              <div class="text-xl font-bold text-purple-light">9.2</div>
+              <div class="text-xl font-bold" style="color: var(--accent-orange);">9.2</div>
             </div>
           </div>
           
           <!-- Rank 3 -->
           <div v-fade-in class="card">
             <div class="flex items-center">
-              <div class="text-4xl font-bold text-purple-light mr-6">3</div>
+              <div class="text-4xl font-bold mr-6" style="color: var(--accent-orange);">3</div>
               <div class="flex-1">
                 <h3 class="text-xl font-bold">复仇者联盟：终局之战</h3>
                 <p class="text-sm text-gray-300">Avengers: Endgame (2019)</p>
               </div>
-              <div class="text-xl font-bold text-purple-light">9.0</div>
+              <div class="text-xl font-bold" style="color: var(--accent-orange);">9.0</div>
             </div>
           </div>
           
           <!-- Rank 4 -->
           <div v-fade-in class="card">
             <div class="flex items-center">
-              <div class="text-4xl font-bold text-purple-light mr-6">4</div>
+              <div class="text-4xl font-bold mr-6" style="color: var(--accent-orange);">4</div>
               <div class="flex-1">
                 <h3 class="text-xl font-bold">黑豹</h3>
                 <p class="text-sm text-gray-300">Black Panther (2018)</p>
               </div>
-              <div class="text-xl font-bold text-purple-light">8.8</div>
+              <div class="text-xl font-bold" style="color: var(--accent-orange);">8.8</div>
             </div>
           </div>
           
           <!-- Rank 5 -->
           <div v-fade-in class="card">
             <div class="flex items-center">
-              <div class="text-4xl font-bold text-purple-light mr-6">5</div>
+              <div class="text-4xl font-bold mr-6" style="color: var(--accent-orange);">5</div>
               <div class="flex-1">
                 <h3 class="text-xl font-bold">奇异博士</h3>
                 <p class="text-sm text-gray-300">Doctor Strange (2016)</p>
               </div>
-              <div class="text-xl font-bold text-purple-light">8.5</div>
+              <div class="text-xl font-bold" style="color: var(--accent-orange);">8.5</div>
             </div>
           </div>
         </div>
@@ -717,9 +755,9 @@ let interestsController = null
   </section>
   
   <!-- Marvel Universe Infographic -->
-  <section class="py-16 bg-black bg-opacity-30">
+  <section class="py-16" style="background: var(--bg-soft);">
     <div class="container mx-auto px-4">
-      <h2 class="text-5xl font-bold mb-6 glow-text text-center">漫威宇宙时间线</h2>
+      <h2 class="text-5xl font-bold mb-6 text-center">漫威宇宙时间线</h2>
       <p class="text-gray-300 text-center mb-12 max-w-3xl mx-auto">
         这是一个简化的漫威电影宇宙时间线，帮助理解各个电影之间的联系。
         <span class="block text-sm text-gray-400 mt-1">A simplified timeline of the Marvel Cinematic Universe.</span>
@@ -727,17 +765,17 @@ let interestsController = null
       
       <div class="relative max-w-4xl mx-auto py-8">
         <!-- Timeline Line -->
-        <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-purple-dark bg-opacity-30"></div>
+        <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-1" style="background: rgba(217, 119, 87, 0.2);"></div>
         
         <!-- Timeline Item 1 -->
         <div class="relative z-10 mb-16">
           <div class="flex items-center">
             <div v-fade-in class="w-1/2 pr-8 text-right">
-              <h3 class="text-xl font-bold text-purple-light">第一阶段</h3>
+              <h3 class="text-xl font-bold" style="color: var(--accent-orange);">第一阶段</h3>
               <p class="text-gray-300">起源故事</p>
               <p class="text-sm text-gray-400 mt-2">钢铁侠、雷神、美国队长各自的起源故事，最终在《复仇者联盟》中聚集。</p>
             </div>
-            <div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-purple-light rounded-full"></div>
+            <div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full" style="background: var(--accent-orange);"></div>
             <div v-fade-in class="w-1/2 pl-8">
               <p class="text-sm text-gray-400">2008-2012</p>
             </div>
@@ -750,9 +788,9 @@ let interestsController = null
             <div v-fade-in class="w-1/2 pr-8 text-right">
               <p class="text-sm text-gray-400">2013-2015</p>
             </div>
-            <div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-purple-light rounded-full"></div>
+            <div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full" style="background: var(--accent-orange);"></div>
             <div v-fade-in class="w-1/2 pl-8">
-              <h3 class="text-xl font-bold text-purple-light">第二阶段</h3>
+              <h3 class="text-xl font-bold" style="color: var(--accent-orange);">第二阶段</h3>
               <p class="text-gray-300">团队扩展</p>
               <p class="text-sm text-gray-400 mt-2">银河护卫队加入，复仇者团队扩大，奥创出现。</p>
             </div>
@@ -763,11 +801,11 @@ let interestsController = null
         <div class="relative z-10 mb-16">
           <div class="flex items-center">
             <div v-fade-in class="w-1/2 pr-8 text-right">
-              <h3 class="text-xl font-bold text-purple-light">第三阶段</h3>
+              <h3 class="text-xl font-bold" style="color: var(--accent-orange);">第三阶段</h3>
               <p class="text-gray-300">内战与无限战争</p>
               <p class="text-sm text-gray-400 mt-2">复仇者内战，灭霸收集无限宝石，宇宙危机。</p>
             </div>
-            <div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-purple-light rounded-full"></div>
+            <div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full" style="background: var(--accent-orange);"></div>
             <div v-fade-in class="w-1/2 pl-8">
               <p class="text-sm text-gray-400">2016-2019</p>
             </div>
@@ -780,9 +818,9 @@ let interestsController = null
             <div v-fade-in class="w-1/2 pr-8 text-right">
               <p class="text-sm text-gray-400">2020-现在</p>
             </div>
-            <div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-purple-light rounded-full"></div>
+            <div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full" style="background: var(--accent-orange);"></div>
             <div v-fade-in class="w-1/2 pl-8">
-              <h3 class="text-xl font-bold text-purple-light">第四阶段</h3>
+              <h3 class="text-xl font-bold" style="color: var(--accent-orange);">第四阶段</h3>
               <p class="text-gray-300">多元宇宙</p>
               <p class="text-sm text-gray-400 mt-2">时间变异管理局，多元宇宙的开启，新英雄的崛起。</p>
             </div>
@@ -792,48 +830,6 @@ let interestsController = null
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="bg-black bg-opacity-40 py-12 mt-12">
-    <div class="container mx-auto px-4">
-      <div class="grid md:grid-cols-3 gap-8">
-        <div>
-          <h3 class="text-xl font-bold mb-4">My<span class="text-purple-light">Tech</span>Universe</h3>
-          <p class="text-gray-400">探索、创造与无限可能</p>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-medium mb-4">快速导航</h4>
-          <ul class="space-y-2">
-            <li><router-link to="/" class="text-gray-400 hover:text-white transition-colors">首页</router-link></li>
-            <li><router-link to="/portfolio" class="text-gray-400 hover:text-white transition-colors">作品</router-link></li>
-            <li><router-link to="/interests" class="text-gray-400 hover:text-white transition-colors">兴趣</router-link></li>
-            <li><router-link to="/knowledge" class="text-gray-400 hover:text-white transition-colors">知识库</router-link></li>
-            <li><router-link to="/contact" class="text-gray-400 hover:text-white transition-colors">联系我</router-link></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-medium mb-4">联系方式</h4>
-          <ul class="space-y-2">
-            <li class="text-gray-400">邮箱: yaonanye1@gmail.com</li>
-            <li class="text-gray-400">微信: thanoswillreturn</li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="mt-8 pt-8 border-t border-gray-800 text-center">
-        <p class="text-gray-500 text-sm">
-          &copy; 2025 MyTechUniverse. All rights reserved.
-        </p>
-      </div>
-    </div>
-  </footer>
-  
-  <!-- Scripts -->
-  
-  
-  
-  
   <!-- 电影详情模态框 -->
   <div id="modal" class="modal">
     <div id="modal-content" class="movie-modal">
@@ -878,7 +874,7 @@ let interestsController = null
     
     .movie-card:hover {
       transform: scale(1.03);
-      box-shadow: 0 14px 28px rgba(106, 13, 173, 0.3);
+      box-shadow: 0 14px 28px rgba(20, 20, 19, 0.14);
     }
     
     /* 悬停时添加均匀的深色遮罩 */
@@ -982,8 +978,8 @@ let interestsController = null
     }
     
     .movie-card-content button {
-      background-color: #6A0DAD;
-      color: white;
+      background-color: rgba(255, 253, 248, 0.94);
+      color: var(--ink);
       padding: 0.5rem 1rem;
       border-radius: 4px;
       border: none;
@@ -995,7 +991,8 @@ let interestsController = null
     }
     
     .movie-card-content button:hover {
-      background-color: #8A2BE2;
+      background-color: var(--accent-orange);
+      color: #fff;
       transform: translateY(-2px);
     }
     
@@ -1004,7 +1001,8 @@ let interestsController = null
       display: flex;
       flex-direction: row;
       width: 100%;
-      max-width: 880px;
+      max-width: 980px;
+      min-height: 620px;
       background-color: #0A0C10;
       border-radius: 12px;
       overflow: hidden;
@@ -1024,8 +1022,9 @@ let interestsController = null
       background-color: transparent;
       display: flex;
       flex-direction: column;
+      justify-content: stretch;
       border-bottom: none;
-      width: 35%;
+      width: 38%;
       padding: 0;
     }
     
@@ -1049,20 +1048,83 @@ let interestsController = null
       flex-grow: 1;
       display: flex;
       flex-direction: column;
-      width: 65%;
-      padding: 2rem;
+      justify-content: flex-start;
+      width: 62%;
+      padding: 2.3rem 2.6rem 2.1rem;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 18%),
+        linear-gradient(180deg, rgba(138, 43, 226, 0.06), rgba(138, 43, 226, 0.02));
     }
     
     .movie-modal-title {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .movie-modal-kicker {
+      color: rgba(255, 196, 87, 0.92);
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.9rem;
     }
     
     .movie-modal-title h2 {
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
+      font-size: clamp(2.2rem, 3vw, 2.9rem);
+      font-weight: 700;
+      margin-bottom: 0.65rem;
       color: white;
-      line-height: 1.2;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+    }
+
+    .movie-modal-subtitle {
+      color: rgba(232, 235, 242, 0.84);
+      font-size: 1.02rem;
+      line-height: 1.5;
+    }
+
+    .movie-modal-subtitle span {
+      color: rgba(232, 235, 242, 0.56);
+    }
+
+    .movie-modal-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .movie-modal-meta p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 1.02rem;
+      line-height: 1.4;
+    }
+
+    .movie-modal-meta p span {
+      display: inline-block;
+      margin-right: 0.55rem;
+      color: rgba(232, 235, 242, 0.5);
+      font-size: 0.84rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .movie-modal-rating {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(255, 196, 87, 0.12);
+      border: 1px solid rgba(255, 196, 87, 0.24);
+      color: #FFC457;
+      font-weight: 700;
+      font-size: 1rem;
     }
     
     .movie-modal-info {
@@ -1070,47 +1132,53 @@ let interestsController = null
     }
     
     .movie-modal-section {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.7rem;
     }
     
     .movie-modal-section h3 {
       color: #8A2BE2;
-      font-size: 1.25rem;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
+      font-size: 1.45rem;
+      margin-bottom: 0.75rem;
+      font-weight: 650;
     }
     
     .movie-modal-section p {
       color: #8A8D93;
-      line-height: 1.6;
+      line-height: 1.85;
+      font-size: 1rem;
     }
     
     .movie-modal-quote {
       font-style: italic;
-      padding: 1rem;
+      padding: 1.15rem 1.2rem;
       background-color: rgba(106, 13, 173, 0.1);
-      border-left: 3px solid #8A2BE2;
-      border-radius: 0 8px 8px 0;
-      margin: 1rem 0;
+      border-left: 4px solid #8A2BE2;
+      border-radius: 0 10px 10px 0;
+      margin: 0.85rem 0 0;
     }
     
     .movie-modal-gallery {
-      display: flex;
-      gap: 0.5rem;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
       overflow-x: auto;
-      padding-bottom: 0.5rem;
+      padding-bottom: 0.35rem;
     }
     
     .movie-modal-gallery img {
-      height: 80px;
-      border-radius: 4px;
+      width: 100%;
+      height: 92px;
+      object-fit: cover;
+      border-radius: 8px;
       opacity: 1;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      background: rgba(255, 255, 255, 0.04);
+      transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     }
     
     .movie-modal-gallery img:hover {
       opacity: 1;
       transform: scale(1.05);
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.28);
     }
     
     .modal-close {
@@ -1163,6 +1231,7 @@ let interestsController = null
       .movie-modal {
         flex-direction: column;
         max-width: 95%;
+        min-height: auto;
       }
       
       .movie-modal-header {
@@ -1177,6 +1246,20 @@ let interestsController = null
       
       .movie-modal-content {
         width: 100%;
+        padding: 1.5rem 1.25rem 1.35rem;
+      }
+
+      .movie-modal-meta {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .movie-modal-gallery {
+        grid-template-columns: 1fr;
+      }
+
+      .movie-modal-gallery img {
+        height: 140px;
       }
     }
   
