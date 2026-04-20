@@ -6,21 +6,21 @@ const featuredWorks = [
   {
     title: 'Coze 智能体矩阵',
     label: 'AI 工具集合',
-    description: 'AI 工具集合，38 个智能体作品',
+    description: '把一组可以直接上手的智能体能力整理成统一入口，方便快速浏览和调用。',
     href: 'https://www.coze.cn/user/1484768162621659?access_entrance=share_my_link&bid=6fp998a2k4g09',
     detail: '38 个智能体作品',
   },
   {
     title: '支付宝创意奖项目',
     label: '产品化尝试',
-    description: '想法到体验的落地尝试',
+    description: '从概念、交互到展示包装的一次完整产品化尝试。',
     href: 'https://tbox.alipay.com/pro/share/202502APHi9E00284100?platform=WebService',
     detail: '从概念到交互落地',
   },
   {
     title: 'AI 编程研究写作',
     label: '研究与表达',
-    description: '模型能力与工作流的内容观察',
+    description: '围绕模型能力、工作流与真实使用场景做持续写作和整理。',
     href: 'https://3ovqoo2h83.app.yourware.so/',
     detail: '长期写作主题',
   },
@@ -38,24 +38,19 @@ onMounted(() => {
   const actions = hero?.querySelector('.home-hero__actions')
   const preview = hero?.querySelector('.home-preview')
 
-  if (!hero || !title || !summary || !actions || !preview) {
-    return
-  }
+  if (!hero || !title || !summary || !actions || !preview) return
 
   heroTimeline = gsap.timeline({
     defaults: { ease: 'power2.out' },
     delay: 0.08,
   })
 
-  heroTimeline.from(
-    [identity, sticker],
-    {
-      y: 14,
-      opacity: 0,
-      stagger: 0.08,
-      duration: 0.45,
-    }
-  )
+  heroTimeline.from([identity, sticker], {
+    y: 14,
+    opacity: 0,
+    stagger: 0.08,
+    duration: 0.45,
+  })
   heroTimeline.from(
     title,
     {
@@ -121,8 +116,12 @@ onUnmounted(() => {
       <div class="container">
         <div class="home-hero__layout">
           <div class="home-hero__copy">
-            <div class="home-hero__identity">Stephen</div>
-            <div class="sticker-note sticker-note--orange home-hero__sticker">hand-picked details</div>
+            <div class="home-hero__identity">
+              <span class="home-hero__identity-main">Stephen</span>
+              <span class="home-hero__identity-divider">-</span>
+              <span class="home-hero__identity-sub">叶耀楠</span>
+            </div>
+              <div class="sticker-note sticker-note--orange home-hero__sticker">Selected by Stephen</div>
             <h1 class="home-hero__title">
               把技术做成
               <span class="home-hero__title-accent">人能感受</span>
@@ -186,24 +185,29 @@ onUnmounted(() => {
 
           <div class="home-section__body">
             <div class="section-line home-section__line"></div>
-            <div class="work-list">
+            <p class="featured-intro">
+              只放最能代表我现在方向的几个项目。比起把所有东西都堆在首页，我更希望你能快速看懂我在做什么。
+            </p>
+            <div class="work-list work-list--editorial">
               <a
                 v-for="work in featuredWorks"
                 :key="work.title"
                 :href="work.href"
                 target="_blank"
                 rel="noreferrer"
-                class="work-item"
+                class="work-item work-item--editorial"
               >
-                <div class="work-item__left">
-                  <span class="work-item__label">{{ work.label }}</span>
-                  <span class="work-item__name">{{ work.title }}</span>
-                  <span class="work-item__desc">{{ work.description }}</span>
+                <div class="work-item__main">
+                  <div class="work-item__topline">
+                    <span class="work-item__label">{{ work.label }}</span>
+                    <span class="work-item__detail">{{ work.detail }}</span>
+                  </div>
+                  <div class="work-item__left">
+                    <span class="work-item__name">{{ work.title }}</span>
+                    <span class="work-item__desc">{{ work.description }}</span>
+                  </div>
                 </div>
-                <div class="work-item__right">
-                  <span class="work-item__detail">{{ work.detail }}</span>
-                  <span class="work-item__arrow">→</span>
-                </div>
+                <span class="work-item__arrow">→</span>
               </a>
             </div>
           </div>
@@ -219,11 +223,14 @@ onUnmounted(() => {
           </div>
           <div class="home-section__body">
             <div class="section-line home-section__line"></div>
-            <p class="now-text">
-              大三在读，全职投入开源项目。最近在重构这个网站，同时研究 AI 工具在真实工作流里的实际用法。
+            <p class="now-intro">
+              大三在读，全职投入开源项目。最近在重构这个网站，也在持续研究 AI 工具在真实工作流里的使用方式。
             </p>
             <p class="now-text">
-              如果你也在做有意思的 AI 产品或者内容项目，欢迎聊聊。
+              我更在意那些真正能帮助表达、节省重复劳动、并且能被长期使用下去的产品形态，而不是只在演示里好看的一次性功能。
+            </p>
+            <p class="now-text">
+              如果你也在做 AI 产品、内容系统或者个人品牌方向的项目，我很愿意交流和一起打磨。
             </p>
             <div class="now-links">
               <router-link to="/knowledge">个人知识库 →</router-link>
@@ -242,8 +249,12 @@ onUnmounted(() => {
           </div>
           <div class="home-section__body">
             <div class="section-line home-section__line"></div>
-            <p class="contact-cta">有想法？写邮件给我。</p>
+            <p class="contact-cta">如果你在做有意思的 AI 产品、内容项目或个人品牌网站，我们可以聊聊。</p>
             <a href="mailto:yaonanye1@gmail.com" class="contact-email">yaonanye1@gmail.com →</a>
+            <div class="contact-panel__actions">
+              <router-link to="/portfolio" class="home-text-link">先看作品</router-link>
+              <router-link to="/contact" class="home-text-link">更多联系方式</router-link>
+            </div>
           </div>
         </div>
       </div>
